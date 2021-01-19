@@ -22,4 +22,8 @@ public class Cell {
 	
 	@Builder.Default
 	private CellState state = CellState.COVERED;
+	
+	public void addMinesAround() {
+		this.value++;
+	}
 }
