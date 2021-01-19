@@ -16,7 +16,7 @@ public class Cell {
 	
 	private final int col;
 	
-	private final int value;
+	private int value;
 	
 	private final boolean hasMine;
 	

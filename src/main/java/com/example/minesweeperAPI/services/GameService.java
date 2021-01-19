@@ -6,11 +6,9 @@ import com.example.minesweeperAPI.models.GameState;
 
 public interface GameService {
 	
-	public Game create(int rows, int cols, int mines);
+	public Game start(int rows, int columns, int mines);
 	
-	public Cell[][] start(int gameId);
-	
-	public Cell[][] uncoverCell(int row, int col);
+	public Cell[][] uncoverCell(int gameId, int row, int col);
 	
 	public void pause(int gameId, long time);
 	

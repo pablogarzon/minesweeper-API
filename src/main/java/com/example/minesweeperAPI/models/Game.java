@@ -5,11 +5,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Getter @Setter
+@ToString
 public class Game {
 
 	private int id;	
@@ -18,7 +20,7 @@ public class Game {
 	
 	private final int columns;
 	
-	private final int bombs;
+	private final int mines;
 	
 	private Cell[][] board;
 	
