@@ -15,15 +15,16 @@ public class GameServiceTest {
 		
 		// given
 		service = new GameServiceImpl();
-		int value = 10;
+		int value = 3;
 		
 		// when
-		var result = service.start(value, value, value);
+		var result = service.start(value, value, value, 0, 0);
 		System.out.println(result.toString());
 		
 		// then
 		assertTrue(result.getBoard() != null);
 		assertTrue(result.getBoard()[0].length == value);
-		assertTrue(result.getMines() == value);
+		assertTrue(result.getMines() == 3);
+		assertTrue(!result.getBoard()[0][0].isHasMine());
 	}
 }

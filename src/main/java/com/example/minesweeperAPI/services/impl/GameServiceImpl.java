@@ -11,16 +11,17 @@ import com.example.minesweeperAPI.services.GameService;
 public class GameServiceImpl implements GameService {
 
 	@Override
-	public Game start(int rows, int columns, int mines) {
+	public Game start(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed) {
 		if (mines > rows * columns) {
 			// throw error
 		}
 		
-		var board = createMinefield(rows, columns, mines);
+		var board = createMinefield(rows, columns, mines, xFirstRevealed, yFirstRevealed);
 		
 		countMinesAroundCell(board);
 
 		var game = Game.builder()
+				.id(1) //generated id
 				.rows(rows)
 				.columns(columns)
 				.mines(mines)
@@ -30,7 +31,7 @@ public class GameServiceImpl implements GameService {
 		return game;
 	}
 
-	private Cell[][] createMinefield(int rows, int cols, int mines) {
+	private Cell[][] createMinefield(int rows, int cols, int mines, int xFirstRevealed, int yFirstRevealed) {
 		var board = new Cell[rows][cols];
 		int y, x = 0;
 
@@ -38,7 +39,7 @@ public class GameServiceImpl implements GameService {
 			do {
 				y = (int) (Math.random() * (rows));
 				x = (int) (Math.random() * (cols));
-			} while (board[y][x] != null);
+			} while (board[y][x] != null || (x == xFirstRevealed && y == yFirstRevealed));
 
 			var cell = new Cell(y, x, true);
 
@@ -52,64 +53,62 @@ public class GameServiceImpl implements GameService {
 		int rows = board.length;
 		int columns = board[0].length;
 
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < columns; j++) {
+		for (int y = 0; y < rows; y++) {
+			for (int x = 0; x < columns; x++) {
 
-				if (board[i][j] != null && board[i][j].isHasMine()) {
+				if (board[y][x] != null && board[y][x].isHasMine()) {
 					continue;
 				}
 
-				var cell = new Cell(i, j, false);
-
-				if (i > 0 && j > 0) {
-					if (board[i - 1][j - 1] != null && board[i - 1][j - 1].isHasMine()) {
+				var cell = new Cell(y, x, false);
+				
+				int up = y - 1;
+				int down = y + 1;
+				int left = x - 1;
+				int right = x + 1;
+				
+				if (up >= 0 && left >= 0) {
+					if (board[up][left] != null && board[up][left].isHasMine()) {
+						cell.addMinesAround();
+					}
+				}
+				if (up >= 0) {
+					if (board[up][x] != null && board[up][x].isHasMine()) {
+						cell.addMinesAround();
+					}
+				}
+				if (up >= 0 && right <= columns - 1) {
+					if (board[up][right] != null && board[up][right].isHasMine()) {
+						cell.addMinesAround();
+					}
+				}
+				if (right <= columns - 1) {
+					if (board[y][right] != null && board[y][right].isHasMine()) {
+						cell.addMinesAround();
+					}
+				}
+				if (down <= rows - 1 && right <= columns - 1) {
+					if (board[down][right] != null && board[down][right].isHasMine()) {
+						cell.addMinesAround();
+					}
+				}
+				if (down <= rows - 1) {
+					if (board[down][x] != null && board[down][x].isHasMine()) {
+						cell.addMinesAround();
+					}
+				}
+				if (down <= rows - 1  && left >= 0) {
+					if (board[down][left] != null && board[down][left].isHasMine()) {
+						cell.addMinesAround();
+					}
+				}
+				if (left >= 0) {
+					if (board[y][left] != null && board[y][left].isHasMine()) {
 						cell.addMinesAround();
 					}
 				}
 
-				if (i > 0) {
-					if (board[i - 1][j] != null && board[i - 1][j].isHasMine()) {
-						cell.addMinesAround();
-					}
-				}
-
-				if (i > 0 && j < columns - 1) {
-					if (board[i - 1][j + 1] != null && board[i - 1][j + 1].isHasMine()) {
-						cell.addMinesAround();
-					}
-				}
-
-				if (j > 0) {
-					if (board[i][j - 1] != null && board[i][j - 1].isHasMine()) {
-						cell.addMinesAround();
-					}
-				}
-
-				if (j < columns - 1) {
-					if (board[i][j + 1] != null && board[i][j + 1].isHasMine()) {
-						cell.addMinesAround();
-					}
-				}
-
-				if (i < rows - 1 && j > 0) {
-					if (board[i + 1][j - 1] != null && board[i + 1][j - 1].isHasMine()) {
-						cell.addMinesAround();
-					}
-				}
-
-				if (i < rows - 1) {
-					if (board[i + 1][j] != null && board[i + 1][j].isHasMine()) {
-						cell.addMinesAround();
-					}
-				}
-
-				if (i < rows - 1 && j < columns - 1) {
-					if (board[i + 1][j + 1] != null && board[i + 1][j + 1].isHasMine()) {
-						cell.addMinesAround();
-					}
-				}
-
-				board[i][j] = cell;
+				board[y][x] = cell;
 			}
 		}
 
@@ -138,5 +137,4 @@ public class GameServiceImpl implements GameService {
 		// TODO Auto-generated method stub
 		
 	}
-
 }

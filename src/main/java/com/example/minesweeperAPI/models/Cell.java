@@ -14,7 +14,7 @@ public class Cell {
 	
 	private final int row;
 	
-	private final int col;
+	private final int column;
 	
 	private int value;
 	
