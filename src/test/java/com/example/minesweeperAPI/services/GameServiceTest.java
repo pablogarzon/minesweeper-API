@@ -27,4 +27,23 @@ public class GameServiceTest {
 		assertTrue(result.getMines() == 3);
 		assertTrue(!result.getBoard()[0][0].isHasMine());
 	}
+	
+	@Test
+	public void uncoverCellTest() {
+		// given
+		service = new GameServiceImpl();
+		
+		// when
+		var result = service.uncoverCell(1, 0, 0);
+
+		// then
+		assertTrue(result != null && result.size() == 4);
+		
+		var cellWithTwoMinesAround = result.stream()
+				.filter(c -> c.getRow() == 1 && c.getColumn() == 1)
+				.findFirst()
+				.get();
+		
+		assertTrue(cellWithTwoMinesAround.getValue() == 2);
+	}
 }
