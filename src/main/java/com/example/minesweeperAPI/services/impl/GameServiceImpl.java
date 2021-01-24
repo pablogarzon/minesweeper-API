@@ -18,7 +18,7 @@ public class GameServiceImpl implements GameService {
 	private Game testgame;
 	
 	@Override
-	public Game start(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed) {
+	public Game create(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed) {
 		if (mines > rows * columns) {
 			// throw error
 		}
@@ -34,8 +34,50 @@ public class GameServiceImpl implements GameService {
 				.mines(mines)
 				.board(board)
 				.build();
-		
 		return game;
+	}
+	
+	@Override
+	public Set<Cell> start(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed) {
+		
+		var game = create(rows, columns, mines, xFirstRevealed, yFirstRevealed);
+		
+		var board = game.getBoard();
+		
+		var cell = board[yFirstRevealed][xFirstRevealed];
+		
+		return uncoverAdjacentCells(board, cell);
+	}
+	
+	@Override
+	public Set<Cell> uncoverCell(int gameId, int row, int col) {
+		var game = getCurrentGame(gameId);
+		
+		var board = game.getBoard();
+		
+		var cell = board[row][col];
+		
+		final Set<Cell> cells = uncoverAdjacentCells(board, cell);
+		
+		return cells;
+	}
+	
+	@Override
+	public void pause(int gameId, long time) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void resume(int gameId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void saveResult(int gameId, GameState gameState) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	private Cell[][] createMinefield(int rows, int cols, int mines, int xFirstRevealed, int yFirstRevealed) {
@@ -69,7 +111,7 @@ public class GameServiceImpl implements GameService {
 
 				var cell = new Cell(y, x, false);
 				
-				lookCellsAround(x, y, board, (currentCell) -> {
+				inspectAdjacentCells(x, y, board, (currentCell) -> {
 					if (currentCell != null && currentCell.isHasMine()) {
 						cell.addMinesAround();
 					}
@@ -79,10 +121,9 @@ public class GameServiceImpl implements GameService {
 				board[y][x] = cell;
 			}
 		}
-
 	}
 
-	private void lookCellsAround(int x, int y, Cell[][] board, Consumer<Cell> callback) {
+	private void inspectAdjacentCells(int x, int y, Cell[][] board, Consumer<Cell> callback) {
 		int rows = board.length;
 		int columns = board[0].length;
 		
@@ -117,26 +158,20 @@ public class GameServiceImpl implements GameService {
 		}
 	}
 
-
-	@Override
-	public Set<Cell> uncoverCell(int gameId, int row, int col) {
-		var game = getCurrentGame(gameId);
-		
-		var cell = game.getBoard()[row][col];
-		
+	private Set<Cell> uncoverAdjacentCells(Cell[][] board, Cell cell) {
 		final Set<Cell> cells = new HashSet<>();
 		
 		cell.setState(CellState.UNCOVERED);
 		cells.add(cell);
 		
 		if (cell.getValue() == 0 && !cell.isHasMine()) {			
-			lookCellsAround(row, col, game.getBoard(), (currentCell) -> {
-				cells.addAll(uncoverCell(gameId, currentCell.getRow(), currentCell.getColumn()));
+			inspectAdjacentCells(cell.getRow(), cell.getColumn(), board, (currentCell) -> {
+				cells.addAll(uncoverAdjacentCells(board, currentCell));
 			});
 		}
-		
 		return cells;
 	}
+	
 
 	private Game getCurrentGame(int gameId) {
 		if (this.testgame != null) {
@@ -159,23 +194,5 @@ public class GameServiceImpl implements GameService {
 				.build();
 		this.testgame = game;
 		return game;
-	}
-
-	@Override
-	public void pause(int gameId, long time) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void resume(int gameId) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void saveResult(int gameId, GameState gameState) {
-		// TODO Auto-generated method stub
-		
 	}
 }

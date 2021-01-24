@@ -11,6 +11,24 @@ public class GameServiceTest {
 	private GameService service;
 	
 	@Test
+	public void createGameTest() {
+		
+		// given
+		service = new GameServiceImpl();
+		int value = 3;
+		
+		// when
+		var result = service.create(value, value, value, 0, 0);
+		System.out.println(result.toString());
+		
+		// then
+		assertTrue(result.getBoard() != null);
+		assertTrue(result.getBoard()[0].length == value);
+		assertTrue(result.getMines() == 3);
+		assertTrue(!result.getBoard()[0][0].isHasMine());
+	}
+	
+	@Test
 	public void startTest() {
 		
 		// given
@@ -22,10 +40,9 @@ public class GameServiceTest {
 		System.out.println(result.toString());
 		
 		// then
-		assertTrue(result.getBoard() != null);
-		assertTrue(result.getBoard()[0].length == value);
-		assertTrue(result.getMines() == 3);
-		assertTrue(!result.getBoard()[0][0].isHasMine());
+		assertTrue(result != null);
+		assertTrue(result.size() > 0);
+		assertTrue(!result.iterator().next().isHasMine());
 	}
 	
 	@Test
