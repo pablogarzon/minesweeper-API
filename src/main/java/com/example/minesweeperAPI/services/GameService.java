@@ -12,7 +12,7 @@ public interface GameService {
 	
 	public Set<Cell> start(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed);
 	
-	public Set<Cell> uncoverCell(int gameId, int row, int col);
+	public Set<Cell> uncoverCell(int gameId, int col, int row);
 	
 	public void pause(int gameId, long time);
 	

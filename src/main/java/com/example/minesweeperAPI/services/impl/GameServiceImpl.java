@@ -38,28 +38,19 @@ public class GameServiceImpl implements GameService {
 	}
 	
 	@Override
-	public Set<Cell> start(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed) {
-		
-		var game = create(rows, columns, mines, xFirstRevealed, yFirstRevealed);
-		
-		var board = game.getBoard();
-		
-		var cell = board[yFirstRevealed][xFirstRevealed];
-		
-		return uncoverAdjacentCells(board, cell);
+	public Set<Cell> start(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed) {		
+		var game = create(rows, columns, mines, xFirstRevealed, yFirstRevealed);		
+		final var uncoveredCells = uncoverCells(game, xFirstRevealed, yFirstRevealed);		
+		checkForVictory(game, uncoveredCells);
+		return uncoveredCells;
 	}
 	
 	@Override
-	public Set<Cell> uncoverCell(int gameId, int row, int col) {
-		var game = getCurrentGame(gameId);
-		
-		var board = game.getBoard();
-		
-		var cell = board[row][col];
-		
-		final Set<Cell> cells = uncoverAdjacentCells(board, cell);
-		
-		return cells;
+	public Set<Cell> uncoverCell(int gameId, int col, int row) {
+		var game = getCurrentGame(gameId);		
+		final var uncoveredCells = uncoverCells(game, col, row);		
+		checkForVictory(game, uncoveredCells);
+		return uncoveredCells;
 	}
 	
 	@Override
@@ -122,6 +113,25 @@ public class GameServiceImpl implements GameService {
 			}
 		}
 	}
+	
+	private Set<Cell> uncoverCells(Game game, int x, int y) {
+		final Set<Cell> cells = new HashSet<>();
+		
+		var board = game.getBoard();
+		
+		var cell = board[y][x];
+		
+		cell.setState(CellState.UNCOVERED);
+		cells.add(cell);
+		
+		if (cell.getValue() == 0 && !cell.isHasMine()) {			
+			inspectAdjacentCells(cell.getRow(), cell.getColumn(), board, (currentCell) -> {
+				cells.addAll(uncoverCells(game, currentCell.getColumn(), currentCell.getRow()));
+			});
+		}
+		
+		return cells;
+	}
 
 	private void inspectAdjacentCells(int x, int y, Cell[][] board, Consumer<Cell> callback) {
 		int rows = board.length;
@@ -157,19 +167,16 @@ public class GameServiceImpl implements GameService {
 			callback.accept(board[y][left]);
 		}
 	}
+	
 
-	private Set<Cell> uncoverAdjacentCells(Cell[][] board, Cell cell) {
-		final Set<Cell> cells = new HashSet<>();
-		
-		cell.setState(CellState.UNCOVERED);
-		cells.add(cell);
-		
-		if (cell.getValue() == 0 && !cell.isHasMine()) {			
-			inspectAdjacentCells(cell.getRow(), cell.getColumn(), board, (currentCell) -> {
-				cells.addAll(uncoverAdjacentCells(board, currentCell));
-			});
-		}
-		return cells;
+	private boolean checkForVictory(Game game, final Set<Cell> uncoveredCells) {
+		game.incrementUncoveredCells(uncoveredCells.size());
+        boolean onlyMinesAreCovered = game.getUncoveredCells() + game.getMines() == game.getCellsCount();
+        if (onlyMinesAreCovered) {
+            game.endGame(GameState.VICTORY);
+            return true;
+        }
+        return false;
 	}
 	
 

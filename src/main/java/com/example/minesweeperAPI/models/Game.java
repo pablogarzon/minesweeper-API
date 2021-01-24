@@ -23,10 +23,39 @@ public class Game {
 	private Cell[][] board;
 	
 	@Builder.Default
+	private int uncoveredCells = 0;
+	
+	@Builder.Default
 	private long time = 0L;
 	
 	@Builder.Default
 	private GameState state = GameState.ACTIVE;
+	
+	public void pauseGame() {
+		if(this.state.isActive()) {
+			this.state = GameState.PAUSED;
+		}
+	}
+	
+	public void resumeGame() {
+		if(this.state.isPaused()) {
+			this.state = GameState.ACTIVE;
+		}
+	}
+	
+	public void endGame(GameState state) {
+		if(this.state.isActive() && (state.isFailed() || state.isVictory())) {
+			this.state = state;
+		}
+	}
+	
+	public void incrementUncoveredCells(int uncovered) {
+		this.uncoveredCells += uncovered;
+	}
+	
+	public int getCellsCount() {
+		return this.columns * this.rows;
+	}
 	
 	@Override
 	public String toString() {
@@ -46,4 +75,5 @@ public class Game {
 		}
 		return sb.toString();
 	}
+
 }
