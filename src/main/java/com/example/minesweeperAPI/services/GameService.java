@@ -10,9 +10,9 @@ public interface GameService {
 	
 	public Game create(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed);
 	
-	public Set<Cell> start(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed);
+	public Set<Cell> start(int gameId, int col, int row);
 	
-	public Set<Cell> uncoverCell(int gameId, int col, int row);
+	public Set<Cell> move(int gameId, int col, int row);
 	
 	public void pause(int gameId, long time);
 	

@@ -7,49 +7,60 @@ import java.util.function.Consumer;
 import org.springframework.stereotype.Service;
 
 import com.example.minesweeperAPI.models.Cell;
+import com.example.minesweeperAPI.models.CellCoordinates;
 import com.example.minesweeperAPI.models.CellState;
 import com.example.minesweeperAPI.models.Game;
 import com.example.minesweeperAPI.models.GameState;
+import com.example.minesweeperAPI.repository.GameRepository;
 import com.example.minesweeperAPI.services.GameService;
 
-@Service
-public class GameServiceImpl implements GameService {
+import lombok.RequiredArgsConstructor;
 
-	private Game testgame;
+@Service
+@RequiredArgsConstructor
+public class GameServiceImpl implements GameService {
+	
+	private final GameRepository repository;
 	
 	@Override
 	public Game create(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed) {
 		if (mines > rows * columns) {
 			// throw error
 		}
-		
-		var board = createMinefield(rows, columns, mines, xFirstRevealed, yFirstRevealed);
-		
-		countMinesAroundCell(board);
 
 		var game = Game.builder()
 				.id(1) //generated id
 				.rows(rows)
 				.columns(columns)
 				.mines(mines)
-				.board(board)
 				.build();
+		
+		repository.save(game);
+		
 		return game;
 	}
 	
 	@Override
-	public Set<Cell> start(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed) {		
-		var game = create(rows, columns, mines, xFirstRevealed, yFirstRevealed);		
-		final var uncoveredCells = uncoverCells(game, xFirstRevealed, yFirstRevealed);		
-		checkForVictory(game, uncoveredCells);
+	public Set<Cell> start(int gameId, int col, int row) {
+		Game game = repository.findById(gameId).get();
+		
+		var board = createMinefield(game, col, row);
+		countMinesAroundCell(board);
+		game.setBoard(board);
+		
+		final var uncoveredCells = uncoverCells(game, col, row);
+		game.incrementUncoveredCells(uncoveredCells.size());
+		
 		return uncoveredCells;
 	}
 	
 	@Override
-	public Set<Cell> uncoverCell(int gameId, int col, int row) {
-		var game = getCurrentGame(gameId);		
-		final var uncoveredCells = uncoverCells(game, col, row);		
-		checkForVictory(game, uncoveredCells);
+	public Set<Cell> move(int gameId, int col, int row) {
+		var game = repository.findById(gameId).get();
+		
+		final var uncoveredCells = uncoverCells(game, col, row);
+		game.incrementUncoveredCells(uncoveredCells.size());
+		
 		return uncoveredCells;
 	}
 	
@@ -71,7 +82,11 @@ public class GameServiceImpl implements GameService {
 		
 	}
 
-	private Cell[][] createMinefield(int rows, int cols, int mines, int xFirstRevealed, int yFirstRevealed) {
+	private Cell[][] createMinefield(Game game, int xFirstRevealed, int yFirstRevealed) {
+		int rows = game.getRows();
+		int cols = game.getColumns();
+		int mines = game.getMines();
+		
 		var board = new Cell[rows][cols];
 		int y, x = 0;
 
@@ -81,7 +96,7 @@ public class GameServiceImpl implements GameService {
 				x = (int) (Math.random() * (cols));
 			} while (board[y][x] != null || (x == xFirstRevealed && y == yFirstRevealed));
 
-			var cell = new Cell(y, x, true);
+			var cell = new Cell(new CellCoordinates(x, y), true);
 
 			board[y][x] = cell;
 		}
@@ -100,7 +115,7 @@ public class GameServiceImpl implements GameService {
 					continue;
 				}
 
-				var cell = new Cell(y, x, false);
+				var cell = new Cell(new CellCoordinates(x, y), false);
 				
 				inspectAdjacentCells(x, y, board, (currentCell) -> {
 					if (currentCell != null && currentCell.isHasMine()) {
@@ -124,9 +139,11 @@ public class GameServiceImpl implements GameService {
 		cell.setState(CellState.UNCOVERED);
 		cells.add(cell);
 		
-		if (cell.getValue() == 0 && !cell.isHasMine()) {			
-			inspectAdjacentCells(cell.getRow(), cell.getColumn(), board, (currentCell) -> {
-				cells.addAll(uncoverCells(game, currentCell.getColumn(), currentCell.getRow()));
+		if (cell.getValue() == 0 && !cell.isHasMine()) {
+			inspectAdjacentCells(x, y, board, (current) -> {
+				int currentX = current.getCoordinates().getX();
+				int currentY = current.getCoordinates().getY();
+				cells.addAll(uncoverCells(game, currentX, currentY));
 			});
 		}
 		
@@ -166,40 +183,5 @@ public class GameServiceImpl implements GameService {
 		if (left >= 0) {
 			callback.accept(board[y][left]);
 		}
-	}
-	
-
-	private boolean checkForVictory(Game game, final Set<Cell> uncoveredCells) {
-		game.incrementUncoveredCells(uncoveredCells.size());
-        boolean onlyMinesAreCovered = game.getUncoveredCells() + game.getMines() == game.getCellsCount();
-        if (onlyMinesAreCovered) {
-            game.endGame(GameState.VICTORY);
-            return true;
-        }
-        return false;
-	}
-	
-
-	private Game getCurrentGame(int gameId) {
-		if (this.testgame != null) {
-			return this.testgame;
-		}
-		var board = new Cell[][] {
-			{null, null, new Cell(0, 2, true)},
-			{null, null, null},
-			{new Cell(2, 0, true), null, null},
-		};
-		
-		countMinesAroundCell(board);
-		
-		var game = Game.builder()
-				.id(1) //generated id
-				.rows(3)
-				.columns(3)
-				.mines(2)
-				.board(board)
-				.build();
-		this.testgame = game;
-		return game;
 	}
 }

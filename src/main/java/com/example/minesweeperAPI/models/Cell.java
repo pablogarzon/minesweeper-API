@@ -12,9 +12,7 @@ import lombok.Setter;
 @Getter @Setter
 public class Cell {
 	
-	private final int row;
-	
-	private final int column;
+	private final CellCoordinates coordinates;
 	
 	private int value;
 	

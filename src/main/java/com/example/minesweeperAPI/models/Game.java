@@ -1,17 +1,23 @@
 package com.example.minesweeperAPI.models;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+@Document
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @RequiredArgsConstructor
-@Getter @Setter
+@Getter 
+@Setter
 public class Game {
 
+	@Id
 	private int id;	
 	
 	private final int rows;
@@ -53,8 +59,9 @@ public class Game {
 		this.uncoveredCells += uncovered;
 	}
 	
-	public int getCellsCount() {
-		return this.columns * this.rows;
+	public boolean isGameWon() {
+		var cellCount = this.columns * this.rows;
+		return this.uncoveredCells + this.mines == cellCount;
 	}
 	
 	@Override
@@ -63,16 +70,18 @@ public class Game {
 		sb.append("id=" + id + "\n");
 		sb.append("time=" + this.time + "\n");
 		sb.append("board=" + "\n");
-		for (int i = 0; i < this.rows; i++) {
-			for (int j = 0; j < this.columns; j++) {
-				if (this.board[i][j].isHasMine()) {
-					sb.append("\tb\t");
-				} else {
-					sb.append("\t" + this.board[i][j].getValue() + "\t");	
+		if (board != null) {
+			for (int i = 0; i < this.rows; i++) {
+				for (int j = 0; j < this.columns; j++) {
+					if (this.board[i][j].isHasMine()) {
+						sb.append("\tb\t");
+					} else {
+						sb.append("\t" + this.board[i][j].getValue() + "\t");	
+					}
 				}
+				sb.append("\n");
 			}
-			sb.append("\n");
-		}
+		}	
 		return sb.toString();
 	}
 
