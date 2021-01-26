@@ -66,20 +66,25 @@ public class GameServiceImpl implements GameService {
 	
 	@Override
 	public void pause(int gameId, long time) {
-		// TODO Auto-generated method stub
-		
+		Game game = repository.findById(gameId).get();
+		game.setTime(time);
+		game.setState(GameState.PAUSED);
+		repository.save(game);
 	}
 
 	@Override
 	public void resume(int gameId) {
-		// TODO Auto-generated method stub
-		
+		Game game = repository.findById(gameId).get();
+		game.setState(GameState.ACTIVE);
+		repository.save(game);		
 	}
 
 	@Override
 	public void saveResult(int gameId, GameState gameState) {
-		// TODO Auto-generated method stub
-		
+		Game game = repository.findById(gameId).get();
+		if (gameState.isFailed() || gameState.isVictory()) {
+			game.endGame(gameState);
+		} // else throw exceptions
 	}
 
 	private Cell[][] createMinefield(Game game, int xFirstRevealed, int yFirstRevealed) {
@@ -121,8 +126,7 @@ public class GameServiceImpl implements GameService {
 					if (currentCell != null && currentCell.isHasMine()) {
 						cell.addMinesAround();
 					}
-				});
-				
+				});				
 
 				board[y][x] = cell;
 			}

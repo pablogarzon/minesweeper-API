@@ -18,7 +18,5 @@ public interface GameService {
 	
 	public void resume(int gameId);
 	
-	public void saveResult(int gameId, GameState gameState);
-	
-	
+	public void saveResult(int gameId, GameState gameState);	
 }
