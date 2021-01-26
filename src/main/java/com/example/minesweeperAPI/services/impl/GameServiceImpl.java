@@ -46,10 +46,12 @@ public class GameServiceImpl implements GameService {
 		
 		var board = createMinefield(game, col, row);
 		countMinesAroundCell(board);
-		game.setBoard(board);
 		
-		final var uncoveredCells = uncoverCells(game, col, row);
+		var uncoveredCells = new HashSet<Cell>(); 
+		uncoverCell(board, uncoveredCells, board[row][col]);
 		game.incrementUncoveredCells(uncoveredCells.size());
+		game.setBoard(board);
+		repository.save(game);
 		
 		return uncoveredCells;
 	}
@@ -58,7 +60,8 @@ public class GameServiceImpl implements GameService {
 	public Set<Cell> move(int gameId, int col, int row) {
 		var game = repository.findById(gameId).get();
 		
-		final var uncoveredCells = uncoverCells(game, col, row);
+		final var uncoveredCells = new HashSet<Cell>(); 
+		uncoverCell(game.getBoard(), uncoveredCells, game.getBoard()[row][col]);
 		game.incrementUncoveredCells(uncoveredCells.size());
 		
 		return uncoveredCells;
@@ -110,9 +113,9 @@ public class GameServiceImpl implements GameService {
 	}
 
 	private void countMinesAroundCell(Cell[][] board) {
-		int rows = board.length;
 		int columns = board[0].length;
-
+		int rows = board.length;
+		
 		for (int y = 0; y < rows; y++) {
 			for (int x = 0; x < columns; x++) {
 
@@ -122,7 +125,7 @@ public class GameServiceImpl implements GameService {
 
 				var cell = new Cell(new CellCoordinates(x, y), false);
 				
-				inspectAdjacentCells(x, y, board, (currentCell) -> {
+				inspectAdjacentCells(board, cell, (currentCell) -> {
 					if (currentCell != null && currentCell.isHasMine()) {
 						cell.addMinesAround();
 					}
@@ -133,30 +136,26 @@ public class GameServiceImpl implements GameService {
 		}
 	}
 	
-	private Set<Cell> uncoverCells(Game game, int x, int y) {
-		final Set<Cell> cells = new HashSet<>();
-		
-		var board = game.getBoard();
-		
-		var cell = board[y][x];
-		
+	private void uncoverCell(Cell[][] board, Set<Cell> uncoveredCells, Cell cell) {
+		if (cell.getState().isUnCovered()) {
+			return;
+		}
 		cell.setState(CellState.UNCOVERED);
-		cells.add(cell);
+		uncoveredCells.add(cell);
 		
 		if (cell.getValue() == 0 && !cell.isHasMine()) {
-			inspectAdjacentCells(x, y, board, (current) -> {
-				int currentX = current.getCoordinates().getX();
-				int currentY = current.getCoordinates().getY();
-				cells.addAll(uncoverCells(game, currentX, currentY));
+			inspectAdjacentCells(board, cell, (current) -> {
+				uncoverCell(board, uncoveredCells, current);
 			});
 		}
-		
-		return cells;
 	}
 
-	private void inspectAdjacentCells(int x, int y, Cell[][] board, Consumer<Cell> callback) {
-		int rows = board.length;
+	private void inspectAdjacentCells(Cell[][] board, Cell current, Consumer<Cell> callback) {
 		int columns = board[0].length;
+		int rows = board.length;
+		
+		int x = current.getCoordinates().getX();
+		int y = current.getCoordinates().getY();
 		
 		int up = y - 1;
 		int down = y + 1;
