@@ -6,13 +6,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Document
 @Builder(toBuilder = true)
 @AllArgsConstructor
-@RequiredArgsConstructor
+@NoArgsConstructor
 @Getter 
 @Setter
 public class Game {
@@ -20,11 +21,11 @@ public class Game {
 	@Id
 	private int id;	
 	
-	private final int rows;
+	private int rows;
 	
-	private final int columns;
+	private int columns;
 	
-	private final int mines;
+	private int mines;
 	
 	private Cell[][] board;
 	

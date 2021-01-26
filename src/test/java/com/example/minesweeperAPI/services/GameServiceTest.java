@@ -87,9 +87,14 @@ public class GameServiceTest {
 	public void createGameTest() {		
 		// given
 		int value = 3;
+		var game = Game.builder()
+				.columns(value)
+				.rows(value)
+				.mines(value)
+				.build();
 		
 		// when		
-		when(repository.save(Mockito.any())).thenReturn(new Game(value, value,  value));
+		when(repository.save(Mockito.any())).thenReturn(game);
 		
 		var result = service.create(value, value, value);
 		
@@ -106,8 +111,8 @@ public class GameServiceTest {
 		int y = 0;
 		var emptyGame = Game.builder()
 				.id(1) //generated id
-				.rows(3)
-				.columns(3)
+				.rows(15)
+				.columns(10)
 				.mines(2)
 				.build();
 		
