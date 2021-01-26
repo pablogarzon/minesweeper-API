@@ -23,7 +23,7 @@ public class GameServiceImpl implements GameService {
 	private final GameRepository repository;
 	
 	@Override
-	public Game create(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed) {
+	public Game create(int columns, int rows, int mines) {
 		if (mines > rows * columns) {
 			// throw error
 		}

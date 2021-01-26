@@ -8,7 +8,7 @@ import com.example.minesweeperAPI.models.GameState;
 
 public interface GameService {
 	
-	public Game create(int rows, int columns, int mines, int xFirstRevealed, int yFirstRevealed);
+	public Game create(int columns, int rows, int mines);
 	
 	public Set<Cell> start(int gameId, int col, int row);
 	

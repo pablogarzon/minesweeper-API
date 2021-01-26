@@ -91,7 +91,7 @@ public class GameServiceTest {
 		// when		
 		when(repository.save(Mockito.any())).thenReturn(new Game(value, value,  value));
 		
-		var result = service.create(value, value, value, 0, 0);
+		var result = service.create(value, value, value);
 		
 		// then
 		assertTrue(result != null);
@@ -158,8 +158,7 @@ public class GameServiceTest {
 		var result = service.move(gameId, x, y);
 
 		// then
-		assertTrue(result != null && result.size() == 1);
-		
+		assertTrue(result != null && result.size() == 1);		
 		assertTrue(result.iterator().next().getValue() == 1);
 	}
 }
