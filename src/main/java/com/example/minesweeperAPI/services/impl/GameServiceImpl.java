@@ -55,27 +55,35 @@ public class GameServiceImpl implements GameService {
 		
 		game.incrementUncoveredCells(uncoveredCells.size());
 		game.setBoard(board);
-		GameState state = checkGameState(game, board[row][col]);
-		game.setState(state);
+		game.startGame();
+		checkVictory(game);
 		repository.save(game);
 		
-		return new MoveResultDTO(state.getState(), uncoveredCells);
+		return new MoveResultDTO(game.getState().getState(), uncoveredCells);
 	}
 	
 	@Override
 	public MoveResultDTO move(int gameId, int col, int row) {
 		var game = repository.findById(gameId).get();
+		var cell = game.getBoard()[row][col];
 		
-		final var uncoveredCells = new HashSet<MoveResponseDTO>(); 
-		uncoverCell(game.getBoard(), uncoveredCells, game.getBoard()[row][col]);
+		final var uncoveredCells = new HashSet<MoveResponseDTO>();
 		
-		game.incrementUncoveredCells(uncoveredCells.size());
-		GameState state = checkGameState(game, game.getBoard()[row][col]);
+		if (checkGameOver(cell)) {
+			uncoverMines(game.getBoard(), uncoveredCells);
+			game.endGame(GameState.FAILED);
+		} else {
+			uncoverCell(game.getBoard(), uncoveredCells, cell);
+			game.incrementUncoveredCells(uncoveredCells.size());
+			if (checkVictory(game)) {
+				game.endGame(GameState.VICTORY);
+			}
+		}
 		repository.save(game);
 		
-		return new MoveResultDTO(state.getState(), uncoveredCells);
+		return new MoveResultDTO(game.getState().getState(), uncoveredCells);
 	}
-	
+
 	@Override
 	public void pause(int gameId, long time) {
 		repository.updateGameToPaused(gameId, time);
@@ -84,14 +92,6 @@ public class GameServiceImpl implements GameService {
 	@Override
 	public void resume(int gameId) {
 		repository.updateGameToActive(gameId);
-	}
-
-	@Override
-	public void saveResult(int gameId, GameState gameState) {
-		Game game = repository.findById(gameId).get();
-		if (gameState.isFailed() || gameState.isVictory()) {
-			game.endGame(gameState);
-		} // else throw exceptions
 	}
 
 	private Cell[][] createMinefield(Game game, int xFirstRevealed, int yFirstRevealed) {
@@ -143,6 +143,22 @@ public class GameServiceImpl implements GameService {
 				});				
 
 				board[y][x] = cell;
+			}
+		}
+	}
+	
+	private void uncoverMines(Cell[][] board, HashSet<MoveResponseDTO> uncoveredCells) {
+		int columns = board[0].length;
+		int rows = board.length;
+		
+		for (int y = 0; y < rows; y++) {
+			for (int x = 0; x < columns; x++) {
+				var cell = board[y][x];
+				if (board[y][x].isHasMine()) {
+					var coordinates = new CoordinatesDTO(cell.getCoordinates().getX(), cell.getCoordinates().getY());
+					var move = new MoveResponseDTO(coordinates, cell.getValue());
+					uncoveredCells.add(move);
+				}
 			}
 		}
 	}
@@ -202,14 +218,11 @@ public class GameServiceImpl implements GameService {
 		}
 	}
 	
-	private GameState checkGameState(Game game, Cell cell) {
-		if(cell.isHasMine()) {
-			game.endGame(GameState.FAILED);
-		}
-        if (game.isGameWon()) {
-            game.endGame(GameState.VICTORY);
-            return GameState.VICTORY;
-        }
-        return GameState.ACTIVE;
+	private boolean checkGameOver(Cell cell) {
+		return cell.isHasMine();
+	}
+	
+	private boolean checkVictory(Game game) {
+		return game.isGameWon();
 	}
 }

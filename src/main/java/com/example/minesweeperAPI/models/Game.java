@@ -37,6 +37,12 @@ public class Game {
 	@Builder.Default
 	private GameState state = GameState.NOT_STARTED;
 	
+	public void startGame() {
+		if (this.state.isNotStarted()) {
+			this.state = GameState.ACTIVE;
+		}
+	}
+	
 	public void pauseGame() {
 		if(this.state.isActive()) {
 			this.state = GameState.PAUSED;
@@ -73,6 +79,10 @@ public class Game {
 		if (board != null) {
 			for (int i = 0; i < this.rows; i++) {
 				for (int j = 0; j < this.columns; j++) {
+					if (this.board[i][j].getState().isCovered()) {
+						sb.append("\tx\t");
+						continue;
+					}
 					if (this.board[i][j].isHasMine()) {
 						sb.append("\tb\t");
 					} else {

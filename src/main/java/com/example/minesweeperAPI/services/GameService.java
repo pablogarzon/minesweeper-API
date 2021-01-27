@@ -2,7 +2,6 @@ package com.example.minesweeperAPI.services;
 
 import com.example.minesweeperAPI.dto.MoveResultDTO;
 import com.example.minesweeperAPI.models.Game;
-import com.example.minesweeperAPI.models.GameState;
 
 public interface GameService {
 	
@@ -14,7 +13,5 @@ public interface GameService {
 	
 	public void pause(int gameId, long time);
 	
-	public void resume(int gameId);
-	
-	public void saveResult(int gameId, GameState gameState);	
+	public void resume(int gameId);	
 }
