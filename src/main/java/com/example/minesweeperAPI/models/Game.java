@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Document
@@ -36,7 +35,7 @@ public class Game {
 	private long time = 0L;
 	
 	@Builder.Default
-	private GameState state = GameState.ACTIVE;
+	private GameState state = GameState.NOT_STARTED;
 	
 	public void pauseGame() {
 		if(this.state.isActive()) {

@@ -12,6 +12,7 @@ import org.mockito.Mockito;
 import com.example.minesweeperAPI.models.Cell;
 import com.example.minesweeperAPI.models.CellCoordinates;
 import com.example.minesweeperAPI.models.Game;
+import com.example.minesweeperAPI.models.GameState;
 import com.example.minesweeperAPI.repository.GameRepository;
 import com.example.minesweeperAPI.services.impl.GameServiceImpl;
 
@@ -42,7 +43,11 @@ public class GameServiceTest {
 					.hasMine(false)
 					.value(2)
 					.build(),
-				new Cell(new CellCoordinates(2, 0), true)
+				Cell.builder() // cell with mine
+					.coordinates(new CellCoordinates(2, 0))
+					.hasMine(true)
+					.value(0)
+					.build()
 			},
 			{
 				Cell.builder()
@@ -55,10 +60,18 @@ public class GameServiceTest {
 					.hasMine(false)
 					.value(2)
 					.build(),
-				new Cell(new CellCoordinates(2, 1), true)
+				Cell.builder() // cell with mine
+					.coordinates(new CellCoordinates(2, 1))
+					.hasMine(true)
+					.value(0)
+					.build()
 			},
 			{
-				new Cell(new CellCoordinates(0, 2), true),
+				Cell.builder() // cell with mine
+					.coordinates(new CellCoordinates(0, 2))
+					.hasMine(true)
+					.value(0)
+					.build(),
 				Cell.builder()
 					.coordinates(new CellCoordinates(1, 2))
 					.hasMine(false)
@@ -122,8 +135,8 @@ public class GameServiceTest {
 		var result = service.start(gameId, x, y);
 		
 		// then
-		assertTrue(result != null && result.size() > 0);
-		assertTrue(!result.iterator().next().isHasMine());
+		assertTrue(result != null && result.getUncoveredCells().size() > 0);
+		assertTrue(result.getGameState() != GameState.FAILED.getState());
 	}
 	
 	@Test
@@ -139,10 +152,9 @@ public class GameServiceTest {
 		var result = service.move(gameId, x, y);
 
 		// then
-		assertTrue(result != null && result.size() == 4);
+		assertTrue(result != null && result.getUncoveredCells().size() == 4);
 		
-		
-		var cellWithTwoMinesAround = result.stream()
+		var cellWithTwoMinesAround = result.getUncoveredCells().stream()
 				.filter(c -> c.getCoordinates().getY() == 0 && c.getCoordinates().getX() == 1)
 				.findFirst()
 				.get();
@@ -163,7 +175,7 @@ public class GameServiceTest {
 		var result = service.move(gameId, x, y);
 
 		// then
-		assertTrue(result != null && result.size() == 1);		
-		assertTrue(result.iterator().next().getValue() == 1);
+		assertTrue(result != null && result.getUncoveredCells().size() == 1);		
+		assertTrue(result.getUncoveredCells().iterator().next().getValue() == 1);
 	}
 }

@@ -6,6 +6,9 @@ import java.util.function.Consumer;
 
 import org.springframework.stereotype.Service;
 
+import com.example.minesweeperAPI.dto.CoordinatesDTO;
+import com.example.minesweeperAPI.dto.MoveResponseDTO;
+import com.example.minesweeperAPI.dto.MoveResultDTO;
 import com.example.minesweeperAPI.models.Cell;
 import com.example.minesweeperAPI.models.CellCoordinates;
 import com.example.minesweeperAPI.models.CellState;
@@ -41,30 +44,36 @@ public class GameServiceImpl implements GameService {
 	}
 	
 	@Override
-	public Set<Cell> start(int gameId, int col, int row) {
+	public MoveResultDTO start(int gameId, int col, int row) {
 		Game game = repository.findById(gameId).get();
 		
 		var board = createMinefield(game, col, row);
 		countMinesAroundCell(board);
 		
-		var uncoveredCells = new HashSet<Cell>(); 
+		var uncoveredCells = new HashSet<MoveResponseDTO>(); 
 		uncoverCell(board, uncoveredCells, board[row][col]);
+		
 		game.incrementUncoveredCells(uncoveredCells.size());
 		game.setBoard(board);
+		GameState state = checkGameState(game, board[row][col]);
+		game.setState(state);
 		repository.save(game);
 		
-		return uncoveredCells;
+		return new MoveResultDTO(state.getState(), uncoveredCells);
 	}
 	
 	@Override
-	public Set<Cell> move(int gameId, int col, int row) {
+	public MoveResultDTO move(int gameId, int col, int row) {
 		var game = repository.findById(gameId).get();
 		
-		final var uncoveredCells = new HashSet<Cell>(); 
+		final var uncoveredCells = new HashSet<MoveResponseDTO>(); 
 		uncoverCell(game.getBoard(), uncoveredCells, game.getBoard()[row][col]);
-		game.incrementUncoveredCells(uncoveredCells.size());
 		
-		return uncoveredCells;
+		game.incrementUncoveredCells(uncoveredCells.size());
+		GameState state = checkGameState(game, game.getBoard()[row][col]);
+		repository.save(game);
+		
+		return new MoveResultDTO(state.getState(), uncoveredCells);
 	}
 	
 	@Override
@@ -104,7 +113,11 @@ public class GameServiceImpl implements GameService {
 				x = (int) (Math.random() * (cols));
 			} while (board[y][x] != null || (x == xFirstRevealed && y == yFirstRevealed));
 
-			var cell = new Cell(new CellCoordinates(x, y), true);
+			// cell with mine
+			var cell = Cell.builder() 
+				.coordinates(new CellCoordinates(x, y))
+				.hasMine(true)
+				.build();
 
 			board[y][x] = cell;
 		}
@@ -122,8 +135,11 @@ public class GameServiceImpl implements GameService {
 				if (board[y][x] != null && board[y][x].isHasMine()) {
 					continue;
 				}
-
-				var cell = new Cell(new CellCoordinates(x, y), false);
+				
+				var cell = Cell.builder() 
+						.coordinates(new CellCoordinates(x, y))
+						.hasMine(false)
+						.build();
 				
 				inspectAdjacentCells(board, cell, (currentCell) -> {
 					if (currentCell != null && currentCell.isHasMine()) {
@@ -136,12 +152,15 @@ public class GameServiceImpl implements GameService {
 		}
 	}
 	
-	private void uncoverCell(Cell[][] board, Set<Cell> uncoveredCells, Cell cell) {
+	private void uncoverCell(Cell[][] board, Set<MoveResponseDTO> uncoveredCells, Cell cell) {
 		if (cell.getState().isUnCovered()) {
 			return;
 		}
 		cell.setState(CellState.UNCOVERED);
-		uncoveredCells.add(cell);
+		
+		var coordinates = new CoordinatesDTO(cell.getCoordinates().getX(), cell.getCoordinates().getY());
+		var move = new MoveResponseDTO(coordinates, cell.getValue());
+		uncoveredCells.add(move);
 		
 		if (cell.getValue() == 0 && !cell.isHasMine()) {
 			inspectAdjacentCells(board, cell, (current) -> {
@@ -186,5 +205,16 @@ public class GameServiceImpl implements GameService {
 		if (left >= 0) {
 			callback.accept(board[y][left]);
 		}
+	}
+	
+	private GameState checkGameState(Game game, Cell cell) {
+		if(cell.isHasMine()) {
+			game.endGame(GameState.FAILED);
+		}
+        if (game.isGameWon()) {
+            game.endGame(GameState.VICTORY);
+            return GameState.VICTORY;
+        }
+        return GameState.ACTIVE;
 	}
 }
