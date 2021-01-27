@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.minesweeperAPI.dto.CreateGameDTO;
 import com.example.minesweeperAPI.dto.MoveRequestDTO;
 import com.example.minesweeperAPI.dto.MoveResultDTO;
+import com.example.minesweeperAPI.dto.PauseGameDTO;
 import com.example.minesweeperAPI.services.GameService;
 
 import lombok.RequiredArgsConstructor;
@@ -22,9 +24,9 @@ public class GameController {
 	private final GameService service;
 	
 	@PostMapping(value = "/game/create")
-	public Map<String, String> create(@RequestBody CreateGameDTO dto) {
-		service.create(dto.getRows(), dto.getColumns(), dto.getMines());
-		return Collections.singletonMap("result", "ok");
+	public Map<String, Integer> create(@RequestBody CreateGameDTO dto) {
+		var game = service.create(dto.getRows(), dto.getColumns(), dto.getMines());
+		return Collections.singletonMap("gameId", game.getId());
 	}
 	
 	@PostMapping(value = "/game/start")
@@ -47,13 +49,15 @@ public class GameController {
 		return result;
 	}
 	
-	@PatchMapping(value = "/game/pause")
-	public void pause() {
-		
+	@PatchMapping(value = "/game/{gameId}/pause")
+	public Map<String, String> pause(@PathVariable int gameId, @RequestBody PauseGameDTO dto) {
+		service.pause(gameId, dto.getTime());
+		return Collections.singletonMap("status", "PAUSED");
 	}
 	
-	@PatchMapping(value = "/game/resume")
-	public void resume() {
-		
+	@PatchMapping(value = "/game/{gameId}/resume")
+	public Map<String, String> resume(@PathVariable int gameId) {
+		service.resume(gameId);
+		return Collections.singletonMap("status", "ACTIVE");
 	}
 }

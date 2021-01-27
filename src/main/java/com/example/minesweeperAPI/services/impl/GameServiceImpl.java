@@ -78,17 +78,12 @@ public class GameServiceImpl implements GameService {
 	
 	@Override
 	public void pause(int gameId, long time) {
-		Game game = repository.findById(gameId).get();
-		game.setTime(time);
-		game.setState(GameState.PAUSED);
-		repository.save(game);
+		repository.updateGameToPaused(gameId, time);
 	}
 
 	@Override
 	public void resume(int gameId) {
-		Game game = repository.findById(gameId).get();
-		game.setState(GameState.ACTIVE);
-		repository.save(game);		
+		repository.updateGameToActive(gameId);
 	}
 
 	@Override
