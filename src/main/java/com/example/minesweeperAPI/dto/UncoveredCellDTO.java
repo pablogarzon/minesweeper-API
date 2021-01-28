@@ -1,5 +1,7 @@
 package com.example.minesweeperAPI.dto;
 
+import com.example.minesweeperAPI.models.CellCoordinates;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,9 +11,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class MoveResponseDTO {
+public class UncoveredCellDTO {
 
-	private CoordinatesDTO coordinates;
+	private CellCoordinates coordinates;
 	
 	private int value;
 }

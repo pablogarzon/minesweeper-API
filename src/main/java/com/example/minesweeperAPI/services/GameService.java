@@ -1,21 +1,25 @@
 package com.example.minesweeperAPI.services;
 
-import com.example.minesweeperAPI.dto.MoveResultDTO;
-import com.example.minesweeperAPI.exceptions.MineSweeperException;
+import com.example.minesweeperAPI.dto.ActivatedCellResultDTO;
+import com.example.minesweeperAPI.exceptions.BoardDimensionException;
+import com.example.minesweeperAPI.exceptions.GameNotFoundException;
+import com.example.minesweeperAPI.exceptions.InvalidCoordinatesException;
+import com.example.minesweeperAPI.exceptions.InvalidOperationException;
+import com.example.minesweeperAPI.exceptions.OperationNotAllowedException;
 import com.example.minesweeperAPI.models.CellState;
 import com.example.minesweeperAPI.models.Game;
 
 public interface GameService {
 	
-	public Game create(int columns, int rows, int mines) throws MineSweeperException;
+	Game create(int columns, int rows, int mines) throws BoardDimensionException;
 	
-	public MoveResultDTO start(int gameId, int col, int row) throws MineSweeperException;
+	ActivatedCellResultDTO start(int gameId, int col, int row) throws GameNotFoundException, InvalidCoordinatesException, InvalidOperationException;
 	
-	public MoveResultDTO move(int gameId, int col, int row) throws MineSweeperException;
+	ActivatedCellResultDTO move(int gameId, int col, int row) throws GameNotFoundException, InvalidCoordinatesException, OperationNotAllowedException, InvalidOperationException;
 	
-	public void pause(int gameId, long time) throws MineSweeperException;
+	void pause(int gameId, long time) throws GameNotFoundException, OperationNotAllowedException;
 	
-	public void resume(int gameId) throws MineSweeperException;
+	void resume(int gameId) throws GameNotFoundException, InvalidOperationException, OperationNotAllowedException;
 	
-	public void updateCellState(int gameId, int col, int row, CellState state) throws MineSweeperException;
+	void updateCellState(int gameId, int col, int row, CellState state) throws OperationNotAllowedException, GameNotFoundException, InvalidCoordinatesException;
 }

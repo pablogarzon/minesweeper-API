@@ -1,5 +1,7 @@
 package com.example.minesweeperAPI.dto;
 
+import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,11 +9,11 @@ import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter 
+@Getter
 @Setter
-public class CoordinatesDTO {
+public class ActivatedCellResultDTO {
 	
-	private int x;
+	private int gameState;
 	
-	private int y;
+	private Set<UncoveredCellDTO> uncoveredCells;
 }

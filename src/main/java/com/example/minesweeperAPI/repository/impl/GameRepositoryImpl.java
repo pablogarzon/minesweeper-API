@@ -9,7 +9,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.example.minesweeperAPI.exceptions.MineSweeperException;
+import com.example.minesweeperAPI.exceptions.GameNotFoundException;
+import com.example.minesweeperAPI.exceptions.InvalidCoordinatesException;
 import com.example.minesweeperAPI.models.Cell;
 import com.example.minesweeperAPI.models.CellCoordinates;
 import com.example.minesweeperAPI.models.CellState;
@@ -40,10 +41,10 @@ public class GameRepositoryImpl implements GameRepositoryCustom {
 	}
 
 	@Override
-	public CellState findCellPreviousState(int gameId, CellCoordinates coordinates) throws MineSweeperException {
+	public CellState findCellPreviousState(int gameId, CellCoordinates coordinates) throws GameNotFoundException, InvalidCoordinatesException {
 		var exists = mongoTemplate.exists(findGame(gameId), Game.class);
 		if (!exists) {
-			throw MineSweeperException.GameNotFoundException();
+			throw new GameNotFoundException();
 		}
 		// needs improvement
 		Aggregation aggregation = Aggregation.newAggregation(
@@ -58,7 +59,7 @@ public class GameRepositoryImpl implements GameRepositoryCustom {
 		var result = (List<Document>) mongoTemplate.aggregate(aggregation, Game.class, Cell.class)
 				.getRawResults().get("results");
 		if (result == null || result.size() == 0) {
-			throw MineSweeperException.InvalidCoordinatesException();
+			throw new InvalidCoordinatesException();
 		}
 		Document document = (Document) result.get(0).get("board");
 		return CellState.valueOf(document.get("state").toString());

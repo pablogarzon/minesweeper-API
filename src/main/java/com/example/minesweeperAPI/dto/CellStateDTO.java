@@ -1,5 +1,7 @@
 package com.example.minesweeperAPI.dto;
 
+import com.example.minesweeperAPI.models.CellCoordinates;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +13,7 @@ import lombok.Setter;
 @Setter
 public class CellStateDTO {
 	
-	private CoordinatesDTO coordinates;
+	private CellCoordinates coordinates;
 	
 	private int state;
 }

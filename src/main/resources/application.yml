@@ -7,6 +7,8 @@ spring:
   profiles:
     active:
     - dev
+springdoc:  api-docs:
+    path: /minesweeeper-docs
 ---
 spring:
   profiles: dev
