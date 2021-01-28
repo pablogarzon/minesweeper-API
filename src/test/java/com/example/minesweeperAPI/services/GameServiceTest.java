@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.example.minesweeperAPI.exceptions.MineSweeperException;
 import com.example.minesweeperAPI.models.Cell;
 import com.example.minesweeperAPI.models.CellCoordinates;
 import com.example.minesweeperAPI.models.Game;
@@ -101,7 +102,7 @@ public class GameServiceTest {
 	}
 	
 	@Test
-	public void createGameTest() {		
+	public void createGameTest() throws MineSweeperException {		
 		// given
 		int value = 3;
 		var game = Game.builder()
@@ -122,7 +123,7 @@ public class GameServiceTest {
 	}
 	
 	@Test
-	public void startGameTest() {
+	public void startGameTest() throws MineSweeperException {
 		// given
 		int gameId = 1;
 		int x = 2;
@@ -145,7 +146,7 @@ public class GameServiceTest {
 	}
 	
 	@Test
-	public void uncoverCellTest() {
+	public void uncoverCellTest() throws MineSweeperException {
 		// given
 		int gameId = 1;
 		int x = 0;
@@ -168,7 +169,7 @@ public class GameServiceTest {
 	}
 	
 	@Test
-	public void uncoverCellWithOneMineAdjacentTest() {
+	public void uncoverCellWithOneMineAdjacentTest() throws MineSweeperException {
 		// given
 		int gameId = 1;
 		int x = 0;

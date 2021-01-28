@@ -1,6 +1,7 @@
 package com.example.minesweeperAPI.services.impl;
 
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.example.minesweeperAPI.dto.CoordinatesDTO;
 import com.example.minesweeperAPI.dto.MoveResponseDTO;
 import com.example.minesweeperAPI.dto.MoveResultDTO;
+import com.example.minesweeperAPI.exceptions.MineSweeperException;
 import com.example.minesweeperAPI.models.Cell;
 import com.example.minesweeperAPI.models.CellCoordinates;
 import com.example.minesweeperAPI.models.CellState;
@@ -28,9 +30,9 @@ public class GameServiceImpl implements GameService {
 	private final SequenceGeneratorService sequenceGenerator; 
 	
 	@Override
-	public Game create(int columns, int rows, int mines) {
+	public Game create(int columns, int rows, int mines) throws MineSweeperException {
 		if (mines > rows * columns) {
-			// throw error
+			throw MineSweeperException.BoardDimensionException();
 		}
 
 		var game = Game.builder()
@@ -46,8 +48,14 @@ public class GameServiceImpl implements GameService {
 	}
 	
 	@Override
-	public MoveResultDTO start(int gameId, int col, int row) {
-		Game game = repository.findById(gameId).get();
+	public MoveResultDTO start(int gameId, int col, int row) throws MineSweeperException {
+		Game game = findGame(gameId);
+		if (!game.getState().isNotStarted()) {
+			throw MineSweeperException.InvalidOperationException();
+		}
+		if (game.getColumns() -1 < col  || game.getRows() -1 < row) {
+			throw MineSweeperException.InvalidCoordinatesException();
+		}
 		
 		var board = createMinefield(game, col, row);
 		countMinesAroundCell(board);
@@ -65,9 +73,18 @@ public class GameServiceImpl implements GameService {
 	}
 	
 	@Override
-	public MoveResultDTO move(int gameId, int col, int row) {
-		var game = repository.findById(gameId).get();
+	public MoveResultDTO move(int gameId, int col, int row) throws MineSweeperException {
+		var game = findGame(gameId);
+		if (!game.getState().isActive()) {
+			throw MineSweeperException.InvalidOperationException();
+		}
+		if (game.getColumns() -1 < col  || game.getRows() -1 < row) {
+			throw MineSweeperException.InvalidCoordinatesException();
+		}		
 		var cell = game.getBoard()[row][col];
+		if (cell.getState().isUnCovered()) {
+			throw MineSweeperException.InvalidOperationException();
+		}
 		
 		final var uncoveredCells = new HashSet<MoveResponseDTO>();
 		
@@ -87,13 +104,43 @@ public class GameServiceImpl implements GameService {
 	}
 
 	@Override
-	public void pause(int gameId, long time) {
+	public void pause(int gameId, long time) throws MineSweeperException {
+		var previous = findGame(gameId);
+		if (!previous.getState().isActive()) {
+			throw MineSweeperException.InvalidOperationException();
+		}
 		repository.updateGameToPaused(gameId, time);
 	}
 
 	@Override
-	public void resume(int gameId) {
+	public void resume(int gameId) throws MineSweeperException {
+		var previous = findGame(gameId);
+		if (!previous.getState().isPaused()) {
+			throw MineSweeperException.InvalidOperationException();
+		}
 		repository.updateGameToActive(gameId);
+	}
+	
+	@Override
+	public void updateCellState(int gameId, int col, int row, CellState state) throws MineSweeperException {
+		var previousState = repository.findCellPreviousState(gameId, new CellCoordinates(col, row));
+		
+		if (!(previousState.isCovered() && state.isMarkedWithFlag())
+				|| !(previousState.isMarkedWithFlag() && state.isMarkedWithQuestion()) 
+				|| previousState.isUnCovered()) {
+			throw MineSweeperException.InvalidOperationException();
+		}
+		repository.updateCellState(gameId, new CellCoordinates(col, row), state);
+	}
+	
+	private Game findGame(int gameId) throws MineSweeperException {
+		Game game = null;
+		try {
+			game = repository.findById(gameId).get();
+		} catch (NoSuchElementException e) {
+			throw MineSweeperException.GameNotFoundException();
+		}
+		return game;
 	}
 
 	private Cell[][] createMinefield(Game game, int xFirstRevealed, int yFirstRevealed) {
@@ -226,10 +273,5 @@ public class GameServiceImpl implements GameService {
 	
 	private boolean checkVictory(Game game) {
 		return game.isGameWon();
-	}
-
-	@Override
-	public void updateCellState(int gameId, int col, int row, CellState state) {
-		repository.updateCellState(gameId, new CellCoordinates(col, row), state);
 	}
 }
