@@ -26,7 +26,7 @@ public class GameController {
 	private final GameService service;
 	
 	@PostMapping(value = "/game/create")
-	public Map<String, Integer> create(@RequestBody CreateGameDTO dto) {
+	public Map<String, Long> create(@RequestBody CreateGameDTO dto) {
 		var game = service.create(dto.getRows(), dto.getColumns(), dto.getMines());
 		return Collections.singletonMap("gameId", game.getId());
 	}

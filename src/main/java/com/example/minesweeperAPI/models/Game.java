@@ -1,6 +1,7 @@
 package com.example.minesweeperAPI.models;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.AllArgsConstructor;
@@ -16,9 +17,12 @@ import lombok.Setter;
 @Getter 
 @Setter
 public class Game {
+	
+	@Transient
+	public static final String SEQUENCE_NAME = "games_sequence";
 
 	@Id
-	private int id;	
+	private long id;	
 	
 	private int rows;
 	

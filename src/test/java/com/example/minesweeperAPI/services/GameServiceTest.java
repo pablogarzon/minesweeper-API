@@ -15,6 +15,7 @@ import com.example.minesweeperAPI.models.Game;
 import com.example.minesweeperAPI.models.GameState;
 import com.example.minesweeperAPI.repository.GameRepository;
 import com.example.minesweeperAPI.services.impl.GameServiceImpl;
+import com.example.minesweeperAPI.services.impl.SequenceGeneratorService;
 
 public class GameServiceTest {
 	
@@ -22,11 +23,14 @@ public class GameServiceTest {
 	
 	private GameRepository repository;
 	
+	private SequenceGeneratorService sequenceGenerator;
+	
 	@BeforeEach
 	public void init() {
 		repository = Mockito.mock(GameRepository.class);
+		sequenceGenerator = Mockito.mock(SequenceGeneratorService.class);
 		
-		service = new GameServiceImpl(repository);
+		service = new GameServiceImpl(repository, sequenceGenerator);
 	}
 
 	private Game createTestGame() {
@@ -106,8 +110,9 @@ public class GameServiceTest {
 				.mines(value)
 				.build();
 		
-		// when		
+		// when
 		when(repository.save(Mockito.any())).thenReturn(game);
+		when(sequenceGenerator.generateSequence(Mockito.any())).thenReturn(1L);
 		
 		var result = service.create(value, value, value);
 		

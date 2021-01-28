@@ -25,6 +25,8 @@ public class GameServiceImpl implements GameService {
 	
 	private final GameRepository repository;
 	
+	private final SequenceGeneratorService sequenceGenerator; 
+	
 	@Override
 	public Game create(int columns, int rows, int mines) {
 		if (mines > rows * columns) {
@@ -32,7 +34,7 @@ public class GameServiceImpl implements GameService {
 		}
 
 		var game = Game.builder()
-				.id(1) //generated id
+				.id(sequenceGenerator.generateSequence(Game.SEQUENCE_NAME))
 				.rows(rows)
 				.columns(columns)
 				.mines(mines)
