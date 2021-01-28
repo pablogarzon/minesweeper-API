@@ -20,6 +20,7 @@ import com.example.minesweeperAPI.dto.PauseGameDTO;
 import com.example.minesweeperAPI.exceptions.MineSweeperException;
 import com.example.minesweeperAPI.models.CellState;
 import com.example.minesweeperAPI.services.GameService;
+import com.example.minesweeperAPI.utils.EndPointUrls;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,13 +30,13 @@ public class GameController {
 	
 	private final GameService service;
 	
-	@PostMapping(value = "/game/create")
+	@PostMapping(value = EndPointUrls.CREATE)
 	public Map<String, Long> create(@RequestBody CreateGameDTO dto) throws MineSweeperException {
 		var game = service.create(dto.getRows(), dto.getColumns(), dto.getMines());
 		return Collections.singletonMap("gameId", game.getId());
 	}
 	
-	@PostMapping(value = "/game/start")
+	@PostMapping(value = EndPointUrls.START)
 	public MoveResultDTO start(@RequestBody MoveRequestDTO dto) throws MineSweeperException {
 		int x = dto.getCoordinates().getX();
 		int y = dto.getCoordinates().getY();
@@ -45,8 +46,8 @@ public class GameController {
 		return result;
 	}
 	
-	@PostMapping(value = "/game/move")
-	public MoveResultDTO move(@RequestBody MoveRequestDTO dto) throws MineSweeperException {
+	@PostMapping(value = EndPointUrls.UNCOVER_CELL)
+	public MoveResultDTO uncoverCell(@RequestBody MoveRequestDTO dto) throws MineSweeperException {
 		int x = dto.getCoordinates().getX();
 		int y = dto.getCoordinates().getY();
 		
@@ -55,19 +56,19 @@ public class GameController {
 		return result;
 	}
 	
-	@PatchMapping(value = "/game/{gameId}/pause")
+	@PatchMapping(value = EndPointUrls.PAUSE)
 	public Map<String, String> pause(@PathVariable int gameId, @RequestBody PauseGameDTO dto) throws MineSweeperException {
 		service.pause(gameId, dto.getTime());
 		return Collections.singletonMap("status", "PAUSED");
 	}
 	
-	@PatchMapping(value = "/game/{gameId}/resume")
+	@PatchMapping(value = EndPointUrls.RESUME)
 	public Map<String, String> resume(@PathVariable int gameId) throws MineSweeperException {
 		service.resume(gameId);
 		return Collections.singletonMap("status", "ACTIVE");
 	}
 	
-	@PatchMapping(value = "/game/{gameId}/updateCell")
+	@PatchMapping(value = EndPointUrls.MARK_CELL)
 	public Map<String, String> updateCell(@PathVariable int gameId, @RequestBody CellStateDTO dto) throws MineSweeperException {
 		var state = CellState.getByValue(dto.getState());
 		service.updateCellState(gameId, dto.getCoordinates().getX(), dto.getCoordinates().getY(), state);

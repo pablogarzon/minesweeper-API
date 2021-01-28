@@ -27,7 +27,7 @@ public class GameServiceImpl implements GameService {
 	
 	private final GameRepository repository;
 	
-	private final SequenceGeneratorService sequenceGenerator; 
+	private final SequenceGeneratorService sequenceGenerator;
 	
 	@Override
 	public Game create(int columns, int rows, int mines) throws MineSweeperException {
@@ -76,7 +76,7 @@ public class GameServiceImpl implements GameService {
 	public MoveResultDTO move(int gameId, int col, int row) throws MineSweeperException {
 		var game = findGame(gameId);
 		if (!game.getState().isActive()) {
-			throw MineSweeperException.InvalidOperationException();
+			throw MineSweeperException.OperationNotAllowedException();
 		}
 		if (game.getColumns() -1 < col  || game.getRows() -1 < row) {
 			throw MineSweeperException.InvalidCoordinatesException();
@@ -107,7 +107,7 @@ public class GameServiceImpl implements GameService {
 	public void pause(int gameId, long time) throws MineSweeperException {
 		var previous = findGame(gameId);
 		if (!previous.getState().isActive()) {
-			throw MineSweeperException.InvalidOperationException();
+			throw MineSweeperException.OperationNotAllowedException();
 		}
 		repository.updateGameToPaused(gameId, time);
 	}
@@ -115,22 +115,25 @@ public class GameServiceImpl implements GameService {
 	@Override
 	public void resume(int gameId) throws MineSweeperException {
 		var previous = findGame(gameId);
-		if (!previous.getState().isPaused()) {
+		if (previous.getState().isPaused()) {
+			repository.updateGameToActive(gameId);
+		} else {
 			throw MineSweeperException.InvalidOperationException();
 		}
-		repository.updateGameToActive(gameId);
 	}
 	
 	@Override
 	public void updateCellState(int gameId, int col, int row, CellState state) throws MineSweeperException {
 		var previousState = repository.findCellPreviousState(gameId, new CellCoordinates(col, row));
-		
-		if (!(previousState.isCovered() && state.isMarkedWithFlag())
-				|| !(previousState.isMarkedWithFlag() && state.isMarkedWithQuestion()) 
-				|| previousState.isUnCovered()) {
+
+		boolean isfromCoveredToRedFlag = previousState.isCovered() && state.isMarkedWithFlag();
+		boolean isfromRedFlagToQuestion = previousState.isMarkedWithFlag() && state.isMarkedWithQuestion();
+		if (isfromCoveredToRedFlag || isfromRedFlagToQuestion || !previousState.isUnCovered()) {
+			repository.updateCellState(gameId, new CellCoordinates(col, row), state);
+		} else {
 			throw MineSweeperException.InvalidOperationException();
 		}
-		repository.updateCellState(gameId, new CellCoordinates(col, row), state);
+		
 	}
 	
 	private Game findGame(int gameId) throws MineSweeperException {

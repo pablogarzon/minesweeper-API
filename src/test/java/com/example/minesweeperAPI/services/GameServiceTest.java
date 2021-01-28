@@ -95,6 +95,7 @@ public class GameServiceTest {
 				.rows(3)
 				.columns(3)
 				.mines(2)
+				.state(GameState.ACTIVE)
 				.board(board)
 				.build();
 		
@@ -148,7 +149,8 @@ public class GameServiceTest {
 	@Test
 	public void uncoverCellTest() throws MineSweeperException {
 		// given
-		int gameId = 1;
+		int gameId = 1; 
+				
 		int x = 0;
 		int y = 0;
 		
