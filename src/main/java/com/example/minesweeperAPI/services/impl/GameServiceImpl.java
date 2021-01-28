@@ -225,4 +225,9 @@ public class GameServiceImpl implements GameService {
 	private boolean checkVictory(Game game) {
 		return game.isGameWon();
 	}
+
+	@Override
+	public void updateCellState(int gameId, int col, int row, CellState state) {
+		repository.updateCellState(gameId, new CellCoordinates(col, row), state);
+	}
 }

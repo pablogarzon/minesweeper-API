@@ -9,10 +9,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.minesweeperAPI.dto.CellStateDTO;
 import com.example.minesweeperAPI.dto.CreateGameDTO;
 import com.example.minesweeperAPI.dto.MoveRequestDTO;
 import com.example.minesweeperAPI.dto.MoveResultDTO;
 import com.example.minesweeperAPI.dto.PauseGameDTO;
+import com.example.minesweeperAPI.models.CellState;
 import com.example.minesweeperAPI.services.GameService;
 
 import lombok.RequiredArgsConstructor;
@@ -59,5 +61,12 @@ public class GameController {
 	public Map<String, String> resume(@PathVariable int gameId) {
 		service.resume(gameId);
 		return Collections.singletonMap("status", "ACTIVE");
+	}
+	
+	@PatchMapping(value = "/game/{gameId}/updateCell")
+	public Map<String, String> updateCell(@PathVariable int gameId, @RequestBody CellStateDTO dto) {
+		var state = CellState.getByValue(dto.getState());
+		service.updateCellState(gameId, dto.getCoordinates().getX(), dto.getCoordinates().getY(), state);
+		return Collections.singletonMap("status", state.name());
 	}
 }
