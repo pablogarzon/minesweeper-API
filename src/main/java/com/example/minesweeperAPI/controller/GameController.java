@@ -35,7 +35,7 @@ public class GameController {
 	@Operation(summary = "Create a new minesweeper game")
 	@PostMapping(value = EndPointUrls.CREATE)
 	public Map<String, Long> create(@RequestBody CreateGameDTO dto) throws BoardDimensionException {
-		var game = service.create(dto.getRows(), dto.getColumns(), dto.getMines());
+		var game = service.create(dto.getColumns(), dto.getRows(), dto.getMines());
 		return Collections.singletonMap("gameId", game.getId());
 	}
 	

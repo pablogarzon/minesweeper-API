@@ -1,5 +1,6 @@
 package com.example.minesweeperAPI.controller;
 
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,5 +37,12 @@ public class GlobalErrorsController {
 	public ResponseEntity<ExceptionDTO> handleBadRequestException(MineSweeperException ex) {
 		final var res = new ExceptionDTO(ex.getClass().getSimpleName(), ex.getMessage());
 		return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
+	}
+	
+	@ExceptionHandler({DataAccessResourceFailureException.class})
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	public ResponseEntity<ExceptionDTO> handleDBConnectionError() {
+		final var res = new ExceptionDTO(DataAccessResourceFailureException.class.getSimpleName(), "DB connection error");
+		return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }
