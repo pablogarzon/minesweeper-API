@@ -13,8 +13,6 @@ public interface GameService {
 	
 	Game create(int columns, int rows, int mines) throws BoardDimensionException;
 	
-	ActivatedCellResultDTO start(int gameId, int col, int row) throws GameNotFoundException, InvalidCoordinatesException, InvalidOperationException;
-	
 	ActivatedCellResultDTO move(int gameId, int col, int row) throws GameNotFoundException, InvalidCoordinatesException, OperationNotAllowedException, InvalidOperationException;
 	
 	void pause(int gameId, long time) throws GameNotFoundException, OperationNotAllowedException;

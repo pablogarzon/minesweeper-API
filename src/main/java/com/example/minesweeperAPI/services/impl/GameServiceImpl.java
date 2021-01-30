@@ -50,7 +50,6 @@ public class GameServiceImpl implements GameService {
 		return game;
 	}
 	
-	@Override
 	public ActivatedCellResultDTO start(int gameId, int col, int row) throws GameNotFoundException, InvalidCoordinatesException, InvalidOperationException {
 		Game game = findGame(gameId);
 		if (!game.getState().isNotStarted()) {
@@ -72,12 +71,15 @@ public class GameServiceImpl implements GameService {
 		checkVictory(game);
 		repository.save(game);
 		
-		return new ActivatedCellResultDTO(game.getState().getState(), uncoveredCells);
+		return new ActivatedCellResultDTO(game.getState().name(), uncoveredCells);
 	}
 	
 	@Override
 	public ActivatedCellResultDTO move(int gameId, int col, int row) throws GameNotFoundException, InvalidCoordinatesException, OperationNotAllowedException, InvalidOperationException {
 		var game = findGame(gameId);
+		if (game.getState().isNotStarted()) {
+			return start(gameId, col, row);
+		}
 		if (!game.getState().isActive()) {
 			throw OperationNotAllowedException.GameIsNotStarted();
 		}
@@ -103,7 +105,7 @@ public class GameServiceImpl implements GameService {
 		}
 		repository.save(game);
 		
-		return new ActivatedCellResultDTO(game.getState().getState(), uncoveredCells);
+		return new ActivatedCellResultDTO(game.getState().name(), uncoveredCells);
 	}
 
 	@Override
@@ -212,7 +214,7 @@ public class GameServiceImpl implements GameService {
 			for (int x = 0; x < columns; x++) {
 				var cell = board[y][x];
 				if (board[y][x].isHasMine()) {
-					var move = new UncoveredCellDTO(cell.getCoordinates(), cell.getValue());
+					var move = new UncoveredCellDTO(cell.getCoordinates(), true, cell.getValue());
 					uncoveredCells.add(move);
 				}
 			}
@@ -225,7 +227,7 @@ public class GameServiceImpl implements GameService {
 		}
 		cell.setState(CellState.UNCOVERED);
 		
-		var move = new UncoveredCellDTO(cell.getCoordinates(), cell.getValue());
+		var move = new UncoveredCellDTO(cell.getCoordinates(), false, cell.getValue());
 		uncoveredCells.add(move);
 		
 		if (cell.getValue() == 0 && !cell.isHasMine()) {

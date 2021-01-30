@@ -139,11 +139,11 @@ public class GameServiceTest {
 		//when
 		when(repository.findById(Mockito.any())).thenReturn(Optional.of(emptyGame));
 		
-		var result = service.start(gameId, x, y);
+		var result = service.move(gameId, x, y);
 		
 		// then
 		assertTrue(result != null && result.getUncoveredCells().size() > 0);
-		assertTrue(result.getGameState() != GameState.FAILED.getState());
+		assertTrue(!result.getGameState().equals(GameState.FAILED.name()));
 	}
 	
 	@Test

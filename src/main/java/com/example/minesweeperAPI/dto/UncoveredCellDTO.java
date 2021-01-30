@@ -15,5 +15,7 @@ public class UncoveredCellDTO {
 
 	private CellCoordinates coordinates;
 	
+	private boolean hasMine;
+	
 	private int value;
 }

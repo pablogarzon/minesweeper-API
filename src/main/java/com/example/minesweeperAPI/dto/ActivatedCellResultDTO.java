@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 public class ActivatedCellResultDTO {
 	
-	private int gameState;
+	private String gameState;
 	
 	private Set<UncoveredCellDTO> uncoveredCells;
 }

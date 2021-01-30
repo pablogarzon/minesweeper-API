@@ -39,17 +39,6 @@ public class GameController {
 		return Collections.singletonMap("gameId", game.getId());
 	}
 	
-	@Operation(summary = "Start the minesweeper game")
-	@PostMapping(value = EndPointUrls.START)
-	public ActivatedCellResultDTO start(@RequestBody ActivatedCellDTO dto) throws GameNotFoundException, InvalidCoordinatesException, InvalidOperationException {
-		int x = dto.getCoordinates().getX();
-		int y = dto.getCoordinates().getY();
-		
-		final var result = service.start(dto.getGameId(), x, y);;
-		
-		return result;
-	}
-	
 	@Operation(summary = "Uncover the selected cell and all adjacent non-mined cells")
 	@PostMapping(value = EndPointUrls.UNCOVER_CELL)
 	public ActivatedCellResultDTO uncoverCell(@RequestBody ActivatedCellDTO dto)  throws GameNotFoundException, InvalidCoordinatesException, OperationNotAllowedException, InvalidOperationException {
