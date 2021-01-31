@@ -8,7 +8,11 @@ import java.util.function.Consumer;
 import org.springframework.stereotype.Service;
 
 import com.example.minesweeperAPI.dto.UncoveredCellDTO;
-import com.example.minesweeperAPI.dto.ActivatedCellResultDTO;
+import com.example.minesweeperAPI.dto.CellStateDTO;
+import com.example.minesweeperAPI.dto.CreateGameDTO;
+import com.example.minesweeperAPI.dto.PauseGameDTO;
+import com.example.minesweeperAPI.dto.UncoverCellDTO;
+import com.example.minesweeperAPI.dto.UncoverCellResultDTO;
 import com.example.minesweeperAPI.exceptions.BoardDimensionException;
 import com.example.minesweeperAPI.exceptions.GameNotFoundException;
 import com.example.minesweeperAPI.exceptions.InvalidCoordinatesException;
@@ -33,16 +37,16 @@ public class GameServiceImpl implements GameService {
 	private final SequenceGeneratorService sequenceGenerator;
 	
 	@Override
-	public Game create(int columns, int rows, int mines) throws BoardDimensionException {
-		if (mines > rows * columns) {
+	public Game create(CreateGameDTO dto) throws BoardDimensionException {
+		if (dto.getMines() > dto.getRows() * dto.getColumns()) {
 			throw new BoardDimensionException();
 		}
 
 		var game = Game.builder()
 				.id(sequenceGenerator.generateSequence(Game.SEQUENCE_NAME))
-				.rows(rows)
-				.columns(columns)
-				.mines(mines)
+				.rows(dto.getRows())
+				.columns(dto.getColumns())
+				.mines(dto.getMines())
 				.build();
 		
 		repository.save(game);
@@ -50,20 +54,12 @@ public class GameServiceImpl implements GameService {
 		return game;
 	}
 	
-	public ActivatedCellResultDTO start(int gameId, int col, int row) throws GameNotFoundException, InvalidCoordinatesException, InvalidOperationException {
-		Game game = findGame(gameId);
-		if (!game.getState().isNotStarted()) {
-			throw InvalidOperationException.GameAlreadyStarted();
-		}
-		if (game.getColumns() -1 < col  || game.getRows() -1 < row) {
-			throw new InvalidCoordinatesException();
-		}
-		
-		var board = createMinefield(game, col, row);
+	public UncoverCellResultDTO start(Game game, int x, int y) throws GameNotFoundException, InvalidOperationException {	
+		var board = createMinefield(game, x, y);
 		countMinesAroundCell(board);
 		
 		var uncoveredCells = new HashSet<UncoveredCellDTO>(); 
-		uncoverCell(board, uncoveredCells, board[row][col]);
+		uncoverCell(board, uncoveredCells, board[y][x]);
 		
 		game.incrementUncoveredCells(uncoveredCells.size());
 		game.setBoard(board);
@@ -71,22 +67,26 @@ public class GameServiceImpl implements GameService {
 		checkVictory(game);
 		repository.save(game);
 		
-		return new ActivatedCellResultDTO(game.getState().name(), uncoveredCells);
+		return new UncoverCellResultDTO(game.getState().name(), uncoveredCells);
 	}
 	
 	@Override
-	public ActivatedCellResultDTO move(int gameId, int col, int row) throws GameNotFoundException, InvalidCoordinatesException, OperationNotAllowedException, InvalidOperationException {
-		var game = findGame(gameId);
+	public UncoverCellResultDTO uncoverCell(UncoverCellDTO dto) throws GameNotFoundException, InvalidCoordinatesException, OperationNotAllowedException, InvalidOperationException {
+		int x = dto.getCoordinates().getX();
+		int y = dto.getCoordinates().getY();
+		
+		var game = findGame(dto.getGameId());
+		
+		if (game.getColumns() -1 < x  || game.getRows() -1 < y) {
+			throw new InvalidCoordinatesException();
+		}
 		if (game.getState().isNotStarted()) {
-			return start(gameId, col, row);
+			return start(game, x, y);
 		}
 		if (!game.getState().isActive()) {
 			throw OperationNotAllowedException.GameIsNotStarted();
-		}
-		if (game.getColumns() -1 < col  || game.getRows() -1 < row) {
-			throw new InvalidCoordinatesException();
 		}		
-		var cell = game.getBoard()[row][col];
+		var cell = game.getBoard()[y][x];
 		if (cell.getState().isUnCovered()) {
 			throw InvalidOperationException.CellIsAlreadyUncovered();
 		}
@@ -103,22 +103,23 @@ public class GameServiceImpl implements GameService {
 				game.endGame(GameState.VICTORY);
 			}
 		}
+		game.setTime(dto.getTime());
 		repository.save(game);
 		
-		return new ActivatedCellResultDTO(game.getState().name(), uncoveredCells);
+		return new UncoverCellResultDTO(game.getState().name(), uncoveredCells);
 	}
 
 	@Override
-	public void pause(int gameId, long time) throws GameNotFoundException, OperationNotAllowedException {
+	public void pause(long gameId, PauseGameDTO dto) throws GameNotFoundException, OperationNotAllowedException {
 		var previous = findGame(gameId);
 		if (!previous.getState().isActive()) {
 			throw OperationNotAllowedException.GameIsNotActive();
 		}
-		repository.updateGameToPaused(gameId, time);
+		repository.updateGameToPaused(gameId, dto.getTime());
 	}
 
 	@Override
-	public void resume(int gameId) throws GameNotFoundException, InvalidOperationException, OperationNotAllowedException {
+	public void resume(long gameId) throws GameNotFoundException, InvalidOperationException, OperationNotAllowedException {
 		var previous = findGame(gameId);
 		if (!previous.getState().isPaused()) {
 			throw OperationNotAllowedException.GameIsNotActive();
@@ -130,20 +131,20 @@ public class GameServiceImpl implements GameService {
 	}
 	
 	@Override
-	public void updateCellState(int gameId, int col, int row, CellState state) throws OperationNotAllowedException, GameNotFoundException, InvalidCoordinatesException {
-		var previousState = repository.findCellPreviousState(gameId, new CellCoordinates(col, row));
-
+	public void updateCellState(long gameId, CellStateDTO dto) throws OperationNotAllowedException, GameNotFoundException, InvalidCoordinatesException {
+		var previousState = repository.findCellPreviousState(gameId, dto.getCoordinates());
+		var state = CellState.valueOf(dto.getState());
 		boolean isfromCoveredToRedFlag = previousState.isCovered() && state.isMarkedWithFlag();		
 		boolean isfromRedFlagToQuestion = previousState.isMarkedWithFlag() && state.isMarkedWithQuestion();
 		if (isfromCoveredToRedFlag || isfromRedFlagToQuestion || !previousState.isUnCovered()) {
-			repository.updateCellState(gameId, new CellCoordinates(col, row), state);
+			repository.updateCellState(gameId, dto.getCoordinates(), state);
 		} else {
 			throw OperationNotAllowedException.CellStateChangeNotAllowed();
 		}
 		
 	}
 	
-	private Game findGame(int gameId) throws GameNotFoundException {
+	private Game findGame(long gameId) throws GameNotFoundException {
 		Game game = null;
 		try {
 			game = repository.findById(gameId).get();

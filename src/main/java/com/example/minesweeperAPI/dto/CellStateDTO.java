@@ -15,5 +15,5 @@ public class CellStateDTO {
 	
 	private CellCoordinates coordinates;
 	
-	private int state;
+	private String state;
 }

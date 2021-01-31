@@ -6,7 +6,7 @@ public class EndPointUrls {
 	
 	public final static String START = "/game/start";
 	
-	public final static String UNCOVER_CELL = "/game/move";
+	public final static String UNCOVER_CELL = "/game/uncoverCell";
 	
 	public final static String PAUSE = "/game/{gameId}/pause";
 	

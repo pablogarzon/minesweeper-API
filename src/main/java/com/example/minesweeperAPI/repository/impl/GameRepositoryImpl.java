@@ -26,7 +26,7 @@ public class GameRepositoryImpl implements GameRepositoryCustom {
 	private final MongoTemplate mongoTemplate;
 
 	@Override
-	public void updateGameToPaused(int gameId, long time) {		
+	public void updateGameToPaused(long gameId, long time) {		
 		var update = new Update();
 		update.set("time", time);
 		update.set("state", GameState.PAUSED.name());
@@ -35,13 +35,13 @@ public class GameRepositoryImpl implements GameRepositoryCustom {
 	}
 
 	@Override
-	public void updateGameToActive(int gameId) {		
+	public void updateGameToActive(long gameId) {		
 		var update = Update.update("state", GameState.ACTIVE.name());		
 		mongoTemplate.updateFirst(findGame(gameId), update, Game.class);
 	}
 
 	@Override
-	public CellState findCellPreviousState(int gameId, CellCoordinates coordinates) throws GameNotFoundException, InvalidCoordinatesException {
+	public CellState findCellPreviousState(long gameId, CellCoordinates coordinates) throws GameNotFoundException, InvalidCoordinatesException {
 		var exists = mongoTemplate.exists(findGame(gameId), Game.class);
 		if (!exists) {
 			throw new GameNotFoundException();
@@ -66,7 +66,7 @@ public class GameRepositoryImpl implements GameRepositoryCustom {
 	}
 
 	@Override
-	public void updateCellState(int gameId, CellCoordinates coordinates, CellState cellState) {		
+	public void updateCellState(long gameId, CellCoordinates coordinates, CellState cellState) {		
 		var affectedCell = String.format("board.%d.%d.state", coordinates.getY(), coordinates.getX());
 		var update = new Update();
 		update.set(affectedCell, cellState.name());
@@ -74,7 +74,7 @@ public class GameRepositoryImpl implements GameRepositoryCustom {
 		mongoTemplate.updateFirst(findGame(gameId), update, Game.class);
 	}
 	
-	private Query findGame(int gameId) {
+	private Query findGame(long gameId) {
 		return Query.query(Criteria.where("_id").is(gameId));
 	}
 }

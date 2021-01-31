@@ -7,11 +7,11 @@ import com.example.minesweeperAPI.models.CellState;
 
 public interface GameRepositoryCustom {
 	
-	void updateGameToPaused(int gameId, long time);
+	void updateGameToPaused(long gameId, long time);
 	
-	void updateGameToActive(int gameId);
+	void updateGameToActive(long gameId);
 	
-	void updateCellState(int gameId, CellCoordinates coordinates, CellState cellState);
+	void updateCellState(long gameId, CellCoordinates coordinates, CellState cellState);
 	
-	CellState findCellPreviousState(int gameId, CellCoordinates coordinates) throws GameNotFoundException, InvalidCoordinatesException;
+	CellState findCellPreviousState(long gameId, CellCoordinates coordinates) throws GameNotFoundException, InvalidCoordinatesException;
 }

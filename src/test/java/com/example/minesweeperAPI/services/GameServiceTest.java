@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.example.minesweeperAPI.dto.CreateGameDTO;
+import com.example.minesweeperAPI.dto.UncoverCellDTO;
 import com.example.minesweeperAPI.exceptions.MineSweeperException;
 import com.example.minesweeperAPI.models.Cell;
 import com.example.minesweeperAPI.models.CellCoordinates;
@@ -116,7 +118,7 @@ public class GameServiceTest {
 		when(repository.save(Mockito.any())).thenReturn(game);
 		when(sequenceGenerator.generateSequence(Mockito.any())).thenReturn(1L);
 		
-		var result = service.create(value, value, value);
+		var result = service.create(new CreateGameDTO(value, value, value));
 		
 		// then
 		assertTrue(result != null);
@@ -126,7 +128,7 @@ public class GameServiceTest {
 	@Test
 	public void startGameTest() throws MineSweeperException {
 		// given
-		int gameId = 1;
+		long gameId = 1;
 		int x = 2;
 		int y = 0;
 		var emptyGame = Game.builder()
@@ -139,7 +141,7 @@ public class GameServiceTest {
 		//when
 		when(repository.findById(Mockito.any())).thenReturn(Optional.of(emptyGame));
 		
-		var result = service.move(gameId, x, y);
+		var result = service.uncoverCell(new UncoverCellDTO(new CellCoordinates(x, y), gameId, 0L));
 		
 		// then
 		assertTrue(result != null && result.getUncoveredCells().size() > 0);
@@ -149,7 +151,7 @@ public class GameServiceTest {
 	@Test
 	public void uncoverCellTest() throws MineSweeperException {
 		// given
-		int gameId = 1; 
+		long gameId = 1; 
 				
 		int x = 0;
 		int y = 0;
@@ -157,7 +159,7 @@ public class GameServiceTest {
 		// when
 		when(repository.findById(Mockito.any())).thenReturn(Optional.of(createTestGame()));
 		
-		var result = service.move(gameId, x, y);
+		var result = service.uncoverCell(new UncoverCellDTO(new CellCoordinates(x, y), gameId, 0L));
 
 		// then
 		assertTrue(result != null && result.getUncoveredCells().size() == 4);
@@ -173,14 +175,14 @@ public class GameServiceTest {
 	@Test
 	public void uncoverCellWithOneMineAdjacentTest() throws MineSweeperException {
 		// given
-		int gameId = 1;
+		long gameId = 1;
 		int x = 0;
 		int y = 1;
 		
 		// when
 		when(repository.findById(Mockito.any())).thenReturn(Optional.of(createTestGame()));
 		
-		var result = service.move(gameId, x, y);
+		var result = service.uncoverCell(new UncoverCellDTO(new CellCoordinates(x, y), gameId, 0L));
 
 		// then
 		assertTrue(result != null && result.getUncoveredCells().size() == 1);		

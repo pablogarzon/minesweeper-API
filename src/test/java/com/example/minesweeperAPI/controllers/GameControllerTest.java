@@ -22,7 +22,7 @@ import org.springframework.web.client.RestTemplate;
 import com.example.minesweeperAPI.MinesweeperApiApplication;
 import com.example.minesweeperAPI.dto.CellStateDTO;
 import com.example.minesweeperAPI.dto.CreateGameDTO;
-import com.example.minesweeperAPI.dto.ActivatedCellDTO;
+import com.example.minesweeperAPI.dto.UncoverCellDTO;
 import com.example.minesweeperAPI.dto.PauseGameDTO;
 import com.example.minesweeperAPI.models.CellCoordinates;
 import com.example.minesweeperAPI.utils.EndPointUrls;
@@ -68,30 +68,30 @@ public class GameControllerTest {
 		return response;
 	}
     
-    private ResponseEntity<JsonNode> callUncoverCell(ActivatedCellDTO moveDTO) {
+    private ResponseEntity<JsonNode> callUncoverCell(UncoverCellDTO moveDTO) {
 		return restTemplate.exchange(
 				createURLWithPort(EndPointUrls.UNCOVER_CELL),
 				HttpMethod.POST, new HttpEntity<>(moveDTO), JsonNode.class);
 	}
     
-    private ResponseEntity<JsonNode> callPauseGame(int gameId, PauseGameDTO dto) {
-    	var uri = EndPointUrls.PAUSE.replace("{gameId}", Integer.toString(gameId));
+    private ResponseEntity<JsonNode> callPauseGame(long gameId, PauseGameDTO dto) {
+    	var uri = EndPointUrls.PAUSE.replace("{gameId}", Long.toString(gameId));
     	
     	return restTemplate.exchange(
 				createURLWithPort(uri),
 				HttpMethod.PATCH, new HttpEntity<>(dto), JsonNode.class);
 	}
     
-    private ResponseEntity<JsonNode> callResumeGame(int gameId) {
-    	var uri = EndPointUrls.RESUME.replace("{gameId}", Integer.toString(gameId));
+    private ResponseEntity<JsonNode> callResumeGame(long gameId) {
+    	var uri = EndPointUrls.RESUME.replace("{gameId}", Long.toString(gameId));
     	
     	return restTemplate.exchange(
 				createURLWithPort(uri),
 				HttpMethod.PATCH, new HttpEntity<>(null), JsonNode.class);
 	}
     
-    private ResponseEntity<JsonNode> callCellUpdate(int gameId, CellStateDTO dto) {
-    	var uri = EndPointUrls.MARK_CELL.replace("{gameId}", Integer.toString(gameId));
+    private ResponseEntity<JsonNode> callCellUpdate(long gameId, CellStateDTO dto) {
+    	var uri = EndPointUrls.MARK_CELL.replace("{gameId}", Long.toString(gameId));
     	
     	return restTemplate.exchange(
 				createURLWithPort(uri),
@@ -123,8 +123,8 @@ public class GameControllerTest {
 	public void givenValidGameIdOnRequest_WhenStartGame_ThenReturnOk() {
 		// given
 		var gameDTO = new CreateGameDTO(3, 3, 2);
-		int gameId = callCreateGame(gameDTO).getBody().get("gameId").asInt();
-		var moveDTO = new ActivatedCellDTO(new CellCoordinates(1, 0), gameId);
+		long gameId = callCreateGame(gameDTO).getBody().get("gameId").asLong();
+		var moveDTO = new UncoverCellDTO(new CellCoordinates(1, 0), gameId, 0L);
 		// when
 		ResponseEntity<JsonNode> response = callUncoverCell(moveDTO);
 		// then
@@ -134,7 +134,7 @@ public class GameControllerTest {
 	@Test
 	public void givenInvalidGameIdOnRequest_WhenStartGame_ThenReturnNotFound() {
 		// given
-		var moveDTO = new ActivatedCellDTO(new CellCoordinates(1, 0), 99);
+		var moveDTO = new UncoverCellDTO(new CellCoordinates(1, 0), 99, 0L);
 		// when
 		ResponseEntity<JsonNode> response = callUncoverCell(moveDTO);
 		// then
@@ -146,7 +146,7 @@ public class GameControllerTest {
 //		// given
 //		var gameDTO = new CreateGameDTO(3, 3, 2);
 //		var json = callCreateGame(gameDTO);
-//		int gameId = json.getBody().get("gameId").asInt();
+//		long gameId = json.getBody().get("gameId").asLong();
 //		var moveDTO = new ActivatedCellDTO(new CellCoordinates(1, 0), gameId);
 //		callStartGame(moveDTO);
 //		// when
@@ -159,8 +159,8 @@ public class GameControllerTest {
 	public void givenInvalidCoordinatesOnRequest_WhenStartGame_ThenReturnBadRequest() {
 		// given
 		var gameDTO = new CreateGameDTO(3, 3, 2);
-		int gameId = callCreateGame(gameDTO).getBody().get("gameId").asInt();
-		var moveDTO = new ActivatedCellDTO(new CellCoordinates(10, 0), gameId);
+		long gameId = callCreateGame(gameDTO).getBody().get("gameId").asLong();
+		var moveDTO = new UncoverCellDTO(new CellCoordinates(10, 0), gameId, 0L);
 		// when
 		ResponseEntity<JsonNode> response = callUncoverCell(moveDTO);
 		// then
@@ -172,11 +172,11 @@ public class GameControllerTest {
 		// given
 		var gameDTO = new CreateGameDTO(3, 3, 8); //the first cell will by the only non-mined cell
 		var json = callCreateGame(gameDTO);
-		int gameId = json.getBody().get("gameId").asInt();
-		var startDTO = new ActivatedCellDTO(new CellCoordinates(1, 0), gameId);
+		long gameId = json.getBody().get("gameId").asLong();
+		var startDTO = new UncoverCellDTO(new CellCoordinates(1, 0), gameId, 0L);
 		callUncoverCell(startDTO);
 		// when
-		var moveDTO = new ActivatedCellDTO(new CellCoordinates(1, 1), gameId);
+		var moveDTO = new UncoverCellDTO(new CellCoordinates(1, 1), gameId, 1L);
 		ResponseEntity<JsonNode> response = callUncoverCell(moveDTO);
 		// then
 		assertTrue(response.getStatusCode().equals(HttpStatus.OK));
@@ -187,7 +187,7 @@ public class GameControllerTest {
 //		// given
 //		var gameDTO = new CreateGameDTO(3, 3, 2);
 //		var json = callCreateGame(gameDTO);
-//		int gameId = json.getBody().get("gameId").asInt();
+//		long gameId = json.getBody().get("gameId").asLong();
 //		// when
 //		var moveDTO = new ActivatedCellDTO(new CellCoordinates(1, 1), gameId);
 //		ResponseEntity<JsonNode> response = callUncoverCell(moveDTO);
@@ -200,11 +200,11 @@ public class GameControllerTest {
 		// given
 		var gameDTO = new CreateGameDTO(5, 5, 24);
 		var json = callCreateGame(gameDTO);
-		int gameId = json.getBody().get("gameId").asInt();
-		var startDTO = new ActivatedCellDTO(new CellCoordinates(1, 0), gameId);
+		long gameId = json.getBody().get("gameId").asLong();
+		var startDTO = new UncoverCellDTO(new CellCoordinates(1, 0), gameId, 0L);
 		callUncoverCell(startDTO);
 		// when
-		var moveDTO = new ActivatedCellDTO(new CellCoordinates(1, 0), gameId);
+		var moveDTO = new UncoverCellDTO(new CellCoordinates(1, 0), gameId, 1L);
 		ResponseEntity<JsonNode> response = callUncoverCell(moveDTO);
 		// then
 		assertTrue(response.getStatusCode().equals(HttpStatus.CONFLICT));
@@ -214,8 +214,8 @@ public class GameControllerTest {
 	public void givenValidGameIdOnRequest_WhenPauseGame_ThenReturnOk() {
 		// given
 		var gameDTO = new CreateGameDTO(3, 3, 2);
-		int gameId = callCreateGame(gameDTO).getBody().get("gameId").asInt();
-		var startDTO = new ActivatedCellDTO(new CellCoordinates(1, 0), gameId);
+		long gameId = callCreateGame(gameDTO).getBody().get("gameId").asLong();
+		var startDTO = new UncoverCellDTO(new CellCoordinates(1, 0), gameId, 0L);
 		callUncoverCell(startDTO);
 		PauseGameDTO dto = new PauseGameDTO(2L);
 		// when
@@ -228,7 +228,7 @@ public class GameControllerTest {
 	public void givenGameIdOfGameNotStartedOnRequest_WhenPauseGame_ThenReturnBadRequest() {
 		// given
 		var gameDTO = new CreateGameDTO(3, 3, 2);
-		int gameId = callCreateGame(gameDTO).getBody().get("gameId").asInt();
+		long gameId = callCreateGame(gameDTO).getBody().get("gameId").asLong();
 		PauseGameDTO dto = new PauseGameDTO(2L);
 		// when
 		var response = callPauseGame(gameId, dto);
@@ -250,8 +250,8 @@ public class GameControllerTest {
 	public void givenValidPausedGameIdOnRequest_WhenResumeGame_ThenReturnOk() {
 		// given
 		var gameDTO = new CreateGameDTO(3, 3, 2);
-		int gameId = callCreateGame(gameDTO).getBody().get("gameId").asInt();
-		var startDTO = new ActivatedCellDTO(new CellCoordinates(1, 0), gameId);
+		long gameId = callCreateGame(gameDTO).getBody().get("gameId").asLong();
+		var startDTO = new UncoverCellDTO(new CellCoordinates(1, 0), gameId, 0L);
 		callUncoverCell(startDTO);
 		PauseGameDTO dto = new PauseGameDTO(2L);
 		callPauseGame(gameId, dto);
@@ -265,8 +265,8 @@ public class GameControllerTest {
 	public void givenActiveGameIdOnRequest_WhenResumeGame_ThenReturnBadRequest() {
 		// given
 		var gameDTO = new CreateGameDTO(3, 3, 2);
-		int gameId = callCreateGame(gameDTO).getBody().get("gameId").asInt();
-		var startDTO = new ActivatedCellDTO(new CellCoordinates(1, 0), gameId);
+		long gameId = callCreateGame(gameDTO).getBody().get("gameId").asLong();
+		var startDTO = new UncoverCellDTO(new CellCoordinates(1, 0), gameId, 0L);
 		callUncoverCell(startDTO);
 		// when
 		var response = callResumeGame(gameId);
@@ -278,10 +278,10 @@ public class GameControllerTest {
 	public void givenValidGameOnRequest_WhenCellUpdate_ThenReturnOk() {
 		// given
 		var gameDTO = new CreateGameDTO(3, 3, 8);
-		int gameId = callCreateGame(gameDTO).getBody().get("gameId").asInt();
-		var startDTO = new ActivatedCellDTO(new CellCoordinates(1, 0), gameId);
+		long gameId = callCreateGame(gameDTO).getBody().get("gameId").asLong();
+		var startDTO = new UncoverCellDTO(new CellCoordinates(1, 0), gameId, 0L);
 		callUncoverCell(startDTO);
-		var cellStateDto = new CellStateDTO(new CellCoordinates(1, 2), 2);
+		var cellStateDto = new CellStateDTO(new CellCoordinates(1, 2), "MARKED_WITH_FLAG");
 		// when
 		var response = callCellUpdate(gameId, cellStateDto);
 		// then
@@ -292,8 +292,8 @@ public class GameControllerTest {
 	public void givenGameIdOfGameNotStartedOnRequest_WhenCellUpdate_ThenReturnBadRequest() {
 		// given
 		var gameDTO = new CreateGameDTO(3, 3, 2);
-		int gameId = callCreateGame(gameDTO).getBody().get("gameId").asInt();
-		var cellStateDto = new CellStateDTO(new CellCoordinates(1, 2), 2);
+		long gameId = callCreateGame(gameDTO).getBody().get("gameId").asLong();
+		var cellStateDto = new CellStateDTO(new CellCoordinates(1, 2), "MARKED_WITH_FLAG");
 		// when
 		var response = callCellUpdate(gameId, cellStateDto);
 		// then
