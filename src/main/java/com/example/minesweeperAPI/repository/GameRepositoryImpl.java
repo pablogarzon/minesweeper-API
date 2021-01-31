@@ -1,4 +1,4 @@
-package com.example.minesweeperAPI.repository.impl;
+package com.example.minesweeperAPI.repository;
 
 import java.util.List;
 
@@ -16,7 +16,6 @@ import com.example.minesweeperAPI.models.CellCoordinates;
 import com.example.minesweeperAPI.models.CellState;
 import com.example.minesweeperAPI.models.Game;
 import com.example.minesweeperAPI.models.GameState;
-import com.example.minesweeperAPI.repository.GameRepositoryCustom;
 
 import lombok.RequiredArgsConstructor;
 

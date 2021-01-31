@@ -1,4 +1,4 @@
-package com.example.minesweeperAPI.services.impl;
+package com.example.minesweeperAPI.services;
 
 import java.util.Objects;
 

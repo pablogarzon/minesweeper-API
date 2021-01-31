@@ -17,8 +17,6 @@ import com.example.minesweeperAPI.models.CellCoordinates;
 import com.example.minesweeperAPI.models.Game;
 import com.example.minesweeperAPI.models.GameState;
 import com.example.minesweeperAPI.repository.GameRepository;
-import com.example.minesweeperAPI.services.impl.GameServiceImpl;
-import com.example.minesweeperAPI.services.impl.SequenceGeneratorService;
 
 public class GameServiceTest {
 	
@@ -118,7 +116,7 @@ public class GameServiceTest {
 		when(repository.save(Mockito.any())).thenReturn(game);
 		when(sequenceGenerator.generateSequence(Mockito.any())).thenReturn(1L);
 		
-		var result = service.create(new CreateGameDTO(value, value, value));
+		var result = service.create(new CreateGameDTO(value, value, value, 1));
 		
 		// then
 		assertTrue(result != null);

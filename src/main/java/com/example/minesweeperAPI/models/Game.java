@@ -22,7 +22,9 @@ public class Game {
 	public static final String SEQUENCE_NAME = "games_sequence";
 
 	@Id
-	private long id;	
+	private long id;
+	
+	private long userId;
 	
 	private int rows;
 	

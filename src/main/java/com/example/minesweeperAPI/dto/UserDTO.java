@@ -9,13 +9,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class CreateGameDTO {
-
-	private int rows;
+public class UserDTO {
 	
-	private int columns;
-	
-	private int mines;
-	
-	private int userId;
+	private String user;
 }

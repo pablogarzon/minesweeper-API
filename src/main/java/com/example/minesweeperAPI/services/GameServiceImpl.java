@@ -1,4 +1,4 @@
-package com.example.minesweeperAPI.services.impl;
+package com.example.minesweeperAPI.services;
 
 import java.util.HashSet;
 import java.util.NoSuchElementException;
@@ -24,7 +24,6 @@ import com.example.minesweeperAPI.models.CellState;
 import com.example.minesweeperAPI.models.Game;
 import com.example.minesweeperAPI.models.GameState;
 import com.example.minesweeperAPI.repository.GameRepository;
-import com.example.minesweeperAPI.services.GameService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -47,27 +46,12 @@ public class GameServiceImpl implements GameService {
 				.rows(dto.getRows())
 				.columns(dto.getColumns())
 				.mines(dto.getMines())
+				.userId(dto.getUserId())
 				.build();
 		
 		repository.save(game);
 		
 		return game;
-	}
-	
-	public UncoverCellResultDTO start(Game game, int x, int y) throws GameNotFoundException, InvalidOperationException {	
-		var board = createMinefield(game, x, y);
-		countMinesAroundCell(board);
-		
-		var uncoveredCells = new HashSet<UncoveredCellDTO>(); 
-		uncoverCell(board, uncoveredCells, board[y][x]);
-		
-		game.incrementUncoveredCells(uncoveredCells.size());
-		game.setBoard(board);
-		game.startGame();
-		checkVictory(game);
-		repository.save(game);
-		
-		return new UncoverCellResultDTO(game.getState().name(), uncoveredCells);
 	}
 	
 	@Override
@@ -81,11 +65,9 @@ public class GameServiceImpl implements GameService {
 			throw new InvalidCoordinatesException();
 		}
 		if (game.getState().isNotStarted()) {
-			return start(game, x, y);
+			start(game, x, y);
 		}
-		if (!game.getState().isActive()) {
-			throw OperationNotAllowedException.GameIsNotStarted();
-		}		
+		
 		var cell = game.getBoard()[y][x];
 		if (cell.getState().isUnCovered()) {
 			throw InvalidOperationException.CellIsAlreadyUncovered();
@@ -93,13 +75,13 @@ public class GameServiceImpl implements GameService {
 		
 		final var uncoveredCells = new HashSet<UncoveredCellDTO>();
 		
-		if (checkGameOver(cell)) {
+		if (cell.isHasMine()) {
 			uncoverMines(game.getBoard(), uncoveredCells);
 			game.endGame(GameState.FAILED);
 		} else {
 			uncoverCell(game.getBoard(), uncoveredCells, cell);
 			game.incrementUncoveredCells(uncoveredCells.size());
-			if (checkVictory(game)) {
+			if (game.isGameWon()) {
 				game.endGame(GameState.VICTORY);
 			}
 		}
@@ -152,6 +134,13 @@ public class GameServiceImpl implements GameService {
 			throw new GameNotFoundException();
 		}
 		return game;
+	}
+	
+	public void start(Game game, int x, int y) throws GameNotFoundException, InvalidOperationException {	
+		var board = createMinefield(game, x, y);
+		countMinesAroundCell(board);
+		game.setBoard(board);
+		game.startGame();
 	}
 
 	private Cell[][] createMinefield(Game game, int xFirstRevealed, int yFirstRevealed) {
@@ -274,13 +263,5 @@ public class GameServiceImpl implements GameService {
 		if (left >= 0) {
 			callback.accept(board[y][left]);
 		}
-	}
-	
-	private boolean checkGameOver(Cell cell) {
-		return cell.isHasMine();
-	}
-	
-	private boolean checkVictory(Game game) {
-		return game.isGameWon();
 	}
 }
