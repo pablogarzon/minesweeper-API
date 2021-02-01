@@ -8,7 +8,7 @@ java implementation of minesweeper api
 - There is no time limit on game play
 - User needs to enter his name first to play
 
-##Technology stack
+## Technology stack
 - java 11
 - spring boot
 - spring data mongodb
