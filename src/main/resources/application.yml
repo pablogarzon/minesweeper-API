@@ -7,17 +7,25 @@ spring:
   profiles:
     active:
     - ${spring.profiles.active}
-springdoc:  api-docs:
+springdoc:
+  api-docs:
     path: /minesweeeper-docs
 ---
 spring:
   profiles: dev
-  data:    mongodb:      database: minesweeperdb
+  data:
+    mongodb:
+      database: minesweeperdb
       port: 27017
 ---
 spring:
   profiles: test
-  data:    mongodb:      port: 0
+  data:
+    mongodb:
+      port: 0
 ---
 spring:
   profiles: prod
+  data:
+    mongodb:
+      uri: ${mongodb_connection_string}
